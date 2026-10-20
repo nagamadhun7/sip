@@ -1,0 +1,443 @@
+{
+  "version": 1,
+  "basis": "Generic serving estimates; brands and preparation vary. Confirm against the ingredient label.",
+  "ingredients": [
+    {
+      "id": "espresso",
+      "name": "Espresso",
+      "unit": "shot",
+      "volume_ml": 30,
+      "step": 1,
+      "max_amount": 4,
+      "nutrition": {
+        "sugar": 0,
+        "caffeine": 63,
+        "calories": 3,
+        "sodium": 4,
+        "potassium": 35
+      },
+      "dairy": false,
+      "vegan": true,
+      "alcohol": false,
+      "estimate": "Estimated"
+    },
+    {
+      "id": "cold-brew",
+      "name": "Cold brew",
+      "unit": "ml",
+      "volume_ml": 1,
+      "step": 25,
+      "max_amount": 350,
+      "nutrition": {
+        "sugar": 0,
+        "caffeine": 0.65,
+        "calories": 0.02,
+        "sodium": 0.03,
+        "potassium": 0.49
+      },
+      "dairy": false,
+      "vegan": true,
+      "alcohol": false,
+      "estimate": "Estimated"
+    },
+    {
+      "id": "coffee",
+      "name": "Brewed coffee",
+      "unit": "ml",
+      "volume_ml": 1,
+      "step": 25,
+      "max_amount": 400,
+      "nutrition": {
+        "sugar": 0,
+        "caffeine": 0.396,
+        "calories": 0.01,
+        "sodium": 0.02,
+        "potassium": 0.49
+      },
+      "dairy": false,
+      "vegan": true,
+      "alcohol": false,
+      "estimate": "Estimated"
+    },
+    {
+      "id": "black-tea",
+      "name": "Black tea",
+      "unit": "ml",
+      "volume_ml": 1,
+      "step": 25,
+      "max_amount": 400,
+      "nutrition": {
+        "sugar": 0,
+        "caffeine": 0.2,
+        "calories": 0.01,
+        "sodium": 0.03,
+        "potassium": 0.37
+      },
+      "dairy": false,
+      "vegan": true,
+      "alcohol": false,
+      "estimate": "Estimated"
+    },
+    {
+      "id": "green-tea",
+      "name": "Green tea",
+      "unit": "ml",
+      "volume_ml": 1,
+      "step": 25,
+      "max_amount": 400,
+      "nutrition": {
+        "sugar": 0,
+        "caffeine": 0.12,
+        "calories": 0.01,
+        "sodium": 0.01,
+        "potassium": 0.08
+      },
+      "dairy": false,
+      "vegan": true,
+      "alcohol": false,
+      "estimate": "Estimated"
+    },
+    {
+      "id": "milk",
+      "name": "Milk",
+      "unit": "ml",
+      "volume_ml": 1,
+      "step": 25,
+      "max_amount": 600,
+      "nutrition": {
+        "sugar": 0.051,
+        "caffeine": 0,
+        "calories": 0.61,
+        "sodium": 0.43,
+        "potassium": 1.32
+      },
+      "dairy": true,
+      "vegan": false,
+      "alcohol": false,
+      "estimate": "Estimated"
+    },
+    {
+      "id": "oat-milk",
+      "name": "Oat milk, unsweetened",
+      "unit": "ml",
+      "volume_ml": 1,
+      "step": 25,
+      "max_amount": 600,
+      "nutrition": {
+        "sugar": 0.02,
+        "caffeine": 0,
+        "calories": 0.4,
+        "sodium": 0.4,
+        "potassium": 1
+      },
+      "dairy": false,
+      "vegan": true,
+      "alcohol": false,
+      "estimate": "Estimated"
+    },
+    {
+      "id": "soy-milk",
+      "name": "Soy milk, unsweetened",
+      "unit": "ml",
+      "volume_ml": 1,
+      "step": 25,
+      "max_amount": 600,
+      "nutrition": {
+        "sugar": 0.004,
+        "caffeine": 0,
+        "calories": 0.33,
+        "sodium": 0.36,
+        "potassium": 1.18
+      },
+      "dairy": false,
+      "vegan": true,
+      "alcohol": false,
+      "estimate": "Estimated"
+    },
+    {
+      "id": "almond-milk",
+      "name": "Almond milk, unsweetened",
+      "unit": "ml",
+      "volume_ml": 1,
+      "step": 25,
+      "max_amount": 600,
+      "nutrition": {
+        "sugar": 0,
+        "caffeine": 0,
+        "calories": 0.15,
+        "sodium": 0.6,
+        "potassium": 0.67
+      },
+      "dairy": false,
+      "vegan": true,
+      "alcohol": false,
+      "estimate": "Estimated"
+    },
+    {
+      "id": "coconut-water",
+      "name": "Coconut water",
+      "unit": "ml",
+      "volume_ml": 1,
+      "step": 25,
+      "max_amount": 600,
+      "nutrition": {
+        "sugar": 0.026,
+        "caffeine": 0,
+        "calories": 0.19,
+        "sodium": 1.05,
+        "potassium": 2.5
+      },
+      "dairy": false,
+      "vegan": true,
+      "alcohol": false,
+      "estimate": "Estimated"
+    },
+    {
+      "id": "orange-juice",
+      "name": "Orange juice",
+      "unit": "ml",
+      "volume_ml": 1,
+      "step": 25,
+      "max_amount": 500,
+      "nutrition": {
+        "sugar": 0.084,
+        "caffeine": 0,
+        "calories": 0.45,
+        "sodium": 0.01,
+        "potassium": 2
+      },
+      "dairy": false,
+      "vegan": true,
+      "alcohol": false,
+      "estimate": "Estimated"
+    },
+    {
+      "id": "sparkling-water",
+      "name": "Sparkling water",
+      "unit": "ml",
+      "volume_ml": 1,
+      "step": 25,
+      "max_amount": 1000,
+      "nutrition": {
+        "sugar": 0,
+        "caffeine": 0,
+        "calories": 0,
+        "sodium": null,
+        "potassium": null
+      },
+      "dairy": false,
+      "vegan": true,
+      "alcohol": false,
+      "estimate": "Estimated"
+    },
+    {
+      "id": "water",
+      "name": "Still water",
+      "unit": "ml",
+      "volume_ml": 1,
+      "step": 25,
+      "max_amount": 1000,
+      "nutrition": {
+        "sugar": 0,
+        "caffeine": 0,
+        "calories": 0,
+        "sodium": 0,
+        "potassium": 0
+      },
+      "dairy": false,
+      "vegan": true,
+      "alcohol": false,
+      "estimate": "Estimated"
+    },
+    {
+      "id": "ice",
+      "name": "Ice",
+      "unit": "ml",
+      "volume_ml": 1,
+      "step": 25,
+      "max_amount": 500,
+      "nutrition": {
+        "sugar": 0,
+        "caffeine": 0,
+        "calories": 0,
+        "sodium": 0,
+        "potassium": 0
+      },
+      "dairy": false,
+      "vegan": true,
+      "alcohol": false,
+      "estimate": "Estimated"
+    },
+    {
+      "id": "vanilla-syrup",
+      "name": "Vanilla syrup",
+      "unit": "pump",
+      "volume_ml": 10,
+      "step": 1,
+      "max_amount": 4,
+      "nutrition": {
+        "sugar": 5,
+        "caffeine": 0,
+        "calories": 20,
+        "sodium": 0,
+        "potassium": null
+      },
+      "dairy": false,
+      "vegan": true,
+      "alcohol": false,
+      "estimate": "Estimated"
+    },
+    {
+      "id": "caramel-syrup",
+      "name": "Caramel syrup",
+      "unit": "pump",
+      "volume_ml": 10,
+      "step": 1,
+      "max_amount": 4,
+      "nutrition": {
+        "sugar": 5,
+        "caffeine": 0,
+        "calories": 20,
+        "sodium": 0,
+        "potassium": null
+      },
+      "dairy": false,
+      "vegan": true,
+      "alcohol": false,
+      "estimate": "Estimated"
+    },
+    {
+      "id": "honey",
+      "name": "Honey",
+      "unit": "tsp",
+      "volume_ml": 5,
+      "step": 1,
+      "max_amount": 2,
+      "nutrition": {
+        "sugar": 5.7,
+        "caffeine": 0,
+        "calories": 21,
+        "sodium": 0,
+        "potassium": 0.35
+      },
+      "dairy": false,
+      "vegan": false,
+      "alcohol": false,
+      "estimate": "Estimated"
+    },
+    {
+      "id": "sugar",
+      "name": "Sugar",
+      "unit": "tsp",
+      "volume_ml": 4,
+      "step": 1,
+      "max_amount": 4,
+      "nutrition": {
+        "sugar": 4,
+        "caffeine": 0,
+        "calories": 16,
+        "sodium": 0,
+        "potassium": 0
+      },
+      "dairy": false,
+      "vegan": true,
+      "alcohol": false,
+      "estimate": "Estimated"
+    },
+    {
+      "id": "lemon",
+      "name": "Lemon juice",
+      "unit": "ml",
+      "volume_ml": 1,
+      "step": 5,
+      "max_amount": 60,
+      "nutrition": {
+        "sugar": 0.025,
+        "caffeine": 0,
+        "calories": 0.22,
+        "sodium": 0.01,
+        "potassium": 1.03
+      },
+      "dairy": false,
+      "vegan": true,
+      "alcohol": false,
+      "estimate": "Estimated"
+    },
+    {
+      "id": "lime",
+      "name": "Lime juice",
+      "unit": "ml",
+      "volume_ml": 1,
+      "step": 5,
+      "max_amount": 60,
+      "nutrition": {
+        "sugar": 0.017,
+        "caffeine": 0,
+        "calories": 0.25,
+        "sodium": 0.02,
+        "potassium": 1.17
+      },
+      "dairy": false,
+      "vegan": true,
+      "alcohol": false,
+      "estimate": "Estimated"
+    },
+    {
+      "id": "cocoa",
+      "name": "Cocoa powder",
+      "unit": "tsp",
+      "volume_ml": 2,
+      "step": 1,
+      "max_amount": 3,
+      "nutrition": {
+        "sugar": 0.035,
+        "caffeine": 0.46,
+        "calories": 4.56,
+        "sodium": 0.42,
+        "potassium": 30.5
+      },
+      "dairy": false,
+      "vegan": true,
+      "alcohol": false,
+      "estimate": "Estimated"
+    },
+    {
+      "id": "beer",
+      "name": "Beer",
+      "unit": "ml",
+      "volume_ml": 1,
+      "step": 25,
+      "max_amount": 355,
+      "nutrition": {
+        "sugar": null,
+        "caffeine": 0,
+        "calories": 0.43,
+        "sodium": 0.04,
+        "potassium": 0.27
+      },
+      "dairy": false,
+      "vegan": false,
+      "alcohol": true,
+      "estimate": "Estimated"
+    },
+    {
+      "id": "wine",
+      "name": "Wine",
+      "unit": "ml",
+      "volume_ml": 1,
+      "step": 25,
+      "max_amount": 150,
+      "nutrition": {
+        "sugar": 0.01,
+        "caffeine": 0,
+        "calories": 0.85,
+        "sodium": 0.05,
+        "potassium": 1.27
+      },
+      "dairy": false,
+      "vegan": true,
+      "alcohol": true,
+      "estimate": "Estimated"
+    }
+  ]
+}

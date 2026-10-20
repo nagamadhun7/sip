@@ -1,0 +1,297 @@
+import React, { useState } from "react";
+import { View, Pressable, Alert, Platform } from "react-native";
+import { router, useLocalSearchParams, Stack } from "expo-router";
+import { DateTimePicker } from "@expo/ui/community/datetime-picker";
+import { useStore } from "../state/store";
+import { drinks } from "../data/drinks";
+import {
+  Drink,
+  Entry,
+  id,
+  nutrients,
+  Nutrient,
+  validateEntry,
+} from "../lib/model";
+import {
+  Page,
+  T,
+  Input,
+  Button,
+  Row,
+  ErrorText,
+  colors,
+} from "../components/ui";
+export default function DrinkForm() {
+  const params = useLocalSearchParams<{
+    drink?: string;
+    entry?: string;
+    custom?: string;
+    name?: string;
+    barcode?: string;
+  }>();
+  const store = useStore();
+  const existing = store.entries.find((e) => e.id === params.entry),
+    base =
+      existing?.drink ??
+      [...store.library, ...drinks].find((d) => d.id === params.drink);
+  const [initial] = useState<Drink>(
+    () =>
+      base ?? {
+        id: id(),
+        name: params.name ?? "",
+        color: colors.blue,
+        serving: 250,
+        nutrition: {
+          sugar: null,
+          caffeine: null,
+          calories: null,
+          sodium: null,
+          potassium: null,
+        },
+        source: "Entered from label",
+        barcode: params.barcode,
+      },
+  );
+  const [name, setName] = useState(initial.name),
+    [ml, setMl] = useState(String(existing?.ml ?? initial.serving)),
+    [at, setAt] = useState(() => new Date(existing?.at ?? Date.now())),
+    [nutrition, setNutrition] = useState(
+      Object.fromEntries(
+        nutrients.map((k) => [
+          k,
+          initial.nutrition[k] === null ? "" : String(initial.nutrition[k]),
+        ]),
+      ) as Record<Nutrient, string>,
+    ),
+    [error, setError] = useState(""),
+    [busy, setBusy] = useState(false),
+    [picker, setPicker] = useState<"date" | "time" | null>(null);
+  const unit = {
+    sugar: "g",
+    caffeine: "mg",
+    calories: "kcal",
+    sodium: "mg",
+    potassium: "mg",
+  };
+  const amount = Number(ml.replace(",", "."));
+  const norm = (s: string) =>
+    s.trim() === "" ? null : Number(s.replace(",", "."));
+  const draft = (): Entry => ({
+    id: existing?.id ?? id(),
+    ml: amount,
+    at: at.toISOString(),
+    drink: {
+      ...initial,
+      name: name.trim(),
+      serving: amount,
+      nutrition: Object.fromEntries(
+        nutrients.map((k) => [k, norm(nutrition[k])]),
+      ) as Drink["nutrition"],
+    },
+  });
+  async function save(onlyLibrary = false) {
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const entry = draft();
+      validateEntry(entry);
+      if (onlyLibrary || !base || params.custom)
+        await store.saveDrink({ ...entry.drink, id: base?.id ?? initial.id });
+      if (!onlyLibrary) await store.saveEntry(entry);
+      router.dismissAll();
+      router.replace("/");
+    } catch (e) {
+      setError(
+        e instanceof Error
+          ? e.message
+          : "Could not save. Your changes are still here; try again.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function remove() {
+    if (!existing) return;
+    setBusy(true);
+    try {
+      await store.removeEntry(existing.id);
+      router.dismissAll();
+      router.replace("/");
+    } catch {
+      setError("Could not delete this entry. Please try again.");
+      setBusy(false);
+    }
+  }
+  return (
+    <Page
+      footer={
+        <Button
+          title={existing ? "Save changes" : "Add to today"}
+          onPress={() => save()}
+          busy={busy}
+        />
+      }
+    >
+      <Stack.Screen
+        options={{
+          title: existing
+            ? "Edit a drink"
+            : params.custom
+              ? "New drink"
+              : name || "Drink",
+        }}
+      />
+      <View style={{ flexDirection: "row", gap: 12, alignItems: "center" }}>
+        <View
+          style={{
+            width: 18,
+            height: 18,
+            borderRadius: 9,
+            backgroundColor: initial.color,
+          }}
+        />
+        <T size={28} bold>
+          {name || "New drink"}
+        </T>
+      </View>
+      <Input
+        label="Drink name"
+        value={name}
+        onChangeText={setName}
+        placeholder="e.g. Iced oat latte"
+      />
+      <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 18 }}>
+        <Pressable
+          accessibilityLabel="Decrease amount"
+          onPress={() => setMl(String(Math.max(1, amount - 50)))}
+          style={{
+            padding: 16,
+            borderWidth: 1,
+            borderColor: colors.line,
+            borderRadius: 28,
+          }}
+        >
+          <T size={22}>−</T>
+        </Pressable>
+        <View style={{ flex: 1 }}>
+          <Input numeric label="Amount (ml)" value={ml} onChangeText={setMl} />
+        </View>
+        <Pressable
+          accessibilityLabel="Increase amount"
+          onPress={() => setMl(String(Math.min(10000, amount + 50)))}
+          style={{
+            padding: 16,
+            borderWidth: 1,
+            borderColor: colors.line,
+            borderRadius: 28,
+          }}
+        >
+          <T size={22}>+</T>
+        </Pressable>
+      </View>
+      <Row
+        title="Date"
+        value={at.toLocaleDateString()}
+        onPress={() => setPicker("date")}
+      />
+      <Row
+        title="Time"
+        value={at.toLocaleTimeString([], {
+          hour: "numeric",
+          minute: "2-digit",
+        })}
+        onPress={() => setPicker("time")}
+      />
+      {picker ? (
+        <View style={{ gap: 10 }}>
+          <DateTimePicker
+            value={at}
+            mode={picker}
+            maximumDate={new Date()}
+            onChange={(event, date) => {
+              if (date && event.type !== "dismissed") setAt(date);
+              if (Platform.OS === "android") setPicker(null);
+            }}
+            onDismiss={() => setPicker(null)}
+          />
+          {Platform.OS === "ios" ? (
+            <Button secondary title="Done" onPress={() => setPicker(null)} />
+          ) : null}
+        </View>
+      ) : null}
+      <View style={{ gap: 5 }}>
+        <T size={20} bold>
+          Nutrition
+        </T>
+        <T size={13} muted>
+          Enter label values per 100 ml. Blank means unknown, not zero.
+        </T>
+        <T size={12} muted>
+          {initial.source}
+        </T>
+      </View>
+      {nutrients.map((k) => (
+        <View
+          key={k}
+          style={{ flexDirection: "row", alignItems: "center", gap: 20 }}
+        >
+          <View style={{ flex: 1 }}>
+            <Input
+              numeric
+              label={`${k[0].toUpperCase() + k.slice(1)} (${unit[k]} / 100 ml)`}
+              value={nutrition[k]}
+              onChangeText={(v) => setNutrition((n) => ({ ...n, [k]: v }))}
+              placeholder="Not listed"
+            />
+          </View>
+          <View style={{ width: 85, alignItems: "flex-end" }}>
+            <T bold>
+              {nutrition[k].trim() &&
+              Number.isFinite(norm(nutrition[k])) &&
+              Number.isFinite(amount)
+                ? +((Number(norm(nutrition[k])) * amount) / 100).toFixed(1)
+                : "—"}
+            </T>
+            <T size={12} muted>
+              {unit[k]} in drink
+            </T>
+          </View>
+        </View>
+      ))}
+      <ErrorText error={error} />
+      {!existing ? (
+        <Button
+          title="Save to my drinks only"
+          secondary
+          onPress={() => save(true)}
+          disabled={busy}
+        />
+      ) : (
+        <Button
+          title="Delete this entry"
+          danger
+          disabled={busy}
+          onPress={() =>
+            Alert.alert(
+              "Delete this drink?",
+              "This removes this entry and recalculates your totals.",
+              [
+                { text: "Cancel", style: "cancel" },
+                {
+                  text: "Delete",
+                  style: "destructive",
+                  onPress: () => void remove(),
+                },
+              ],
+            )
+          }
+        />
+      )}
+      <T size={12} muted>
+        Nutrition is an estimate unless verified against your label. Sugar is
+        total sugar; product labels do not always report added sugar separately.
+      </T>
+    </Page>
+  );
+}

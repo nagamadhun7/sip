@@ -1,0 +1,35 @@
+[
+  {
+    "id": "e51da517-c5be-4fd3-84aa-7aac55cde93a",
+    "platform": "IOS",
+    "status": "FINISHED",
+    "appIdentifier": "com.sip.tracker",
+    "appVersion": "1.0.0",
+    "appBuildVersion": "1",
+    "createdAt": "2026-10-19T22:41:16.065Z",
+    "completedAt": "2026-10-19T22:49:06.207Z",
+    "downloadUrl": "https://expo.dev/artifacts/eas/0BjQo2P4icyx_9idaiiK6sqvZD58Cy-xtoUy2DmFdxg.tar.gz"
+  },
+  {
+    "id": "59469186-0af9-4ff3-87d6-151c9d305eee",
+    "platform": "ANDROID",
+    "status": "FINISHED",
+    "appIdentifier": "com.sip.tracker",
+    "appVersion": "1.0.0",
+    "appBuildVersion": "3",
+    "createdAt": "2026-10-19T22:41:13.954Z",
+    "completedAt": "2026-10-19T23:03:37.940Z",
+    "downloadUrl": "https://expo.dev/artifacts/eas/Bnsqk2-RMRtJcIO7MCt7NmvLR3cOfnXUR5XnJfjSkz0.aab"
+  },
+  {
+    "id": "8238fd86-96da-4e3d-baa5-35678dad7c6f",
+    "platform": "ANDROID",
+    "status": "IN_QUEUE",
+    "appIdentifier": "com.sip.tracker",
+    "appVersion": "1.0.0",
+    "appBuildVersion": "5",
+    "createdAt": "2026-10-20T18:19:30.391Z",
+    "completedAt": null,
+    "buildPage": "https://expo.dev/accounts/nagamadhun7/projects/sip/builds/8238fd86-96da-4e3d-baa5-35678dad7c6f"
+  }
+]

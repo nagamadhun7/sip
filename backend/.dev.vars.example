@@ -1,0 +1,5 @@
+# Copy to .dev.vars for local use (git-ignored). Production uses wrangler secret put.
+OPENAI_API_KEY=
+REVENUECAT_SECRET_KEY=
+SUPABASE_URL=
+SUPABASE_PUBLISHABLE_KEY=
