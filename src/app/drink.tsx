@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Pressable, Alert, Platform } from "react-native";
+import { View, Pressable, Alert, Platform, Image } from "react-native";
 import { router, useLocalSearchParams, Stack } from "expo-router";
 import { DateTimePicker } from "@expo/ui/community/datetime-picker";
 import { useStore } from "../state/store";
@@ -28,6 +28,7 @@ export default function DrinkForm() {
     custom?: string;
     name?: string;
     barcode?: string;
+    photo?: string;
   }>();
   const store = useStore();
   const existing = store.entries.find((e) => e.id === params.entry),
@@ -40,7 +41,7 @@ export default function DrinkForm() {
         id: id(),
         name: params.name ?? "",
         color: colors.blue,
-        serving: 250,
+        serving: 0,
         nutrition: {
           sugar: null,
           caffeine: null,
@@ -50,6 +51,7 @@ export default function DrinkForm() {
         },
         source: "Entered from label",
         barcode: params.barcode,
+        label_photo: params.photo,
       },
   );
   const [name, setName] = useState(initial.name),
@@ -175,6 +177,19 @@ export default function DrinkForm() {
           {name || "New drink"}
         </T>
       </View>
+      {initial.label_photo ? (
+        <>
+          <Image
+            accessibilityLabel="Saved nutrition label"
+            source={{ uri: initial.label_photo }}
+            style={{ width: "100%", height: 240 }}
+            resizeMode="contain"
+          />
+          <T muted>
+            Enter the printed values below. The photo stays on this device.
+          </T>
+        </>
+      ) : null}
       <Input
         label="Drink name"
         value={name}

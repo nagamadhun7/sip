@@ -16,6 +16,7 @@ export type Drink = {
   nutrition: Nutrition;
   source: string;
   barcode?: string;
+  label_photo?: string;
   missingNutrition?: Nutrient[];
   shape?: "glass" | "cup" | "bottle";
   recipe?: Recipe & { catalog_version: number };

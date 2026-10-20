@@ -159,3 +159,35 @@ export async function purchases() {
   }
   return sdk;
 }
+
+export async function callService<T>(
+  path: string,
+  body: unknown,
+  signal?: AbortSignal,
+): Promise<T> {
+  if (!serverURL || (!serverURL.startsWith("https://") && !__DEV__))
+    throw new MakerError(
+      "This feature needs its server connection configured. Manual logging works offline.",
+      "NOT_CONFIGURED",
+    );
+  const session = await makerSession();
+  const r = await fetch(serverURL + path, {
+    method: "POST",
+    signal: signal
+      ? AbortSignal.any([signal, AbortSignal.timeout(45000)])
+      : AbortSignal.timeout(45000),
+    headers: {
+      Authorization: "Bearer " + session.access_token,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  const result = await r.json();
+  if (!r.ok)
+    throw new MakerError(
+      result.message ?? "The request failed. Retry.",
+      result.code ?? String(r.status),
+      !!result.paywall,
+    );
+  return result;
+}

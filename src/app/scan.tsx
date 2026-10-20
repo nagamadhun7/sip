@@ -3,6 +3,10 @@ import { View, Linking, ActivityIndicator } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { router } from "expo-router";
 import { useStore } from "../state/store";
+import { File, Paths } from "expo-file-system";
+import { callService } from "../drink-maker/client";
+import type { Drink } from "../lib/model";
+import { id } from "../lib/model";
 import { lookupBarcode } from "../lib/barcode";
 import { Page, T, Input, Button, ErrorText } from "../components/ui";
 export default function Scan() {
@@ -11,7 +15,10 @@ export default function Scan() {
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [notFound, setNotFound] = useState(false),
+    [photoMode, setPhotoMode] = useState(false),
+    [ready, setReady] = useState(false),
     [scanning, setScanning] = useState(true);
+  const camera = useRef<CameraView | null>(null);
   const lock = useRef(false),
     controller = useRef<AbortController | null>(null),
     store = useStore();
@@ -28,7 +35,19 @@ export default function Scan() {
     try {
       const cached = store.library.find((d) => d.barcode === value);
       const drink =
-        cached ?? (await lookupBarcode(value, controller.current.signal));
+        cached ??
+        (await lookupBarcode(
+          value,
+          controller.current.signal,
+          async (barcode) =>
+            (
+              await callService<{ drink: Drink | null }>(
+                "/food-lookup",
+                { barcode },
+                controller.current!.signal,
+              )
+            ).drink,
+        ));
       if (controller.current.signal.aborted) return;
       if (!drink) {
         setNotFound(true);
@@ -37,6 +56,7 @@ export default function Scan() {
       await store.saveDrink(drink);
       router.replace({ pathname: "/drink", params: { drink: drink.id } });
     } catch (e) {
+      setNotFound(true);
       if (!controller.current?.signal.aborted)
         setError(
           e instanceof Error
@@ -55,7 +75,8 @@ export default function Scan() {
       </T>
       <T size={13} muted>
         Scan a beverage label or enter its barcode. Only the barcode number is
-        sent to Open Food Facts.
+        sent to Open Food Facts first, then USDA if the fallback is configured.
+        Photos stay on this device.
       </T>
       {permission?.granted ? (
         <View
@@ -67,13 +88,15 @@ export default function Scan() {
           }}
         >
           <CameraView
+            ref={camera}
+            onCameraReady={() => setReady(true)}
             style={{ flex: 1 }}
             facing="back"
             barcodeScannerSettings={{
               barcodeTypes: ["ean13", "ean8", "upc_a", "upc_e"],
             }}
             onBarcodeScanned={
-              scanning && !busy
+              scanning && !busy && !photoMode
                 ? (result) => void lookup(result.data)
                 : undefined
             }
@@ -114,6 +137,31 @@ export default function Scan() {
           />
         </View>
       )}
+      {photoMode && permission?.granted ? (
+        <Button
+          title="Capture label"
+          disabled={!ready || busy}
+          onPress={async () => {
+            setBusy(true);
+            try {
+              const photo = await camera.current?.takePictureAsync({
+                quality: 0.75,
+              });
+              if (!photo?.uri) throw Error("Could not capture the label.");
+              const destination = new File(Paths.document, `label-${id()}.jpg`);
+              await new File(photo.uri).copy(destination);
+              router.replace({
+                pathname: "/drink",
+                params: { custom: "1", barcode: code, photo: destination.uri },
+              });
+            } catch (e) {
+              setError((e as Error).message);
+            } finally {
+              setBusy(false);
+            }
+          }}
+        />
+      ) : null}
       <Input
         numeric
         label="Barcode number"
@@ -141,6 +189,15 @@ export default function Scan() {
           </T>
           <T muted>Add it once. Next time it is instant.</T>
           <Button
+            secondary
+            title="Photograph the label"
+            onPress={async () => {
+              setPhotoMode(true);
+              setScanning(false);
+              if (!permission?.granted) await requestPermission();
+            }}
+          />
+          <Button
             title="Enter label nutrition"
             onPress={() =>
               router.replace({
@@ -151,7 +208,7 @@ export default function Scan() {
           />
         </View>
       ) : null}
-      {!scanning && !busy && permission?.granted ? (
+      {!scanning && !busy && !photoMode && permission?.granted ? (
         <Button
           secondary
           title="Scan again"

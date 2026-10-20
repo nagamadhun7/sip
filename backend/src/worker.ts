@@ -1,7 +1,9 @@
 import { DurableObject } from "cloudflare:workers";
 import type { CacheValue } from "./service";
 import { handleMaker, generateOpenAI, json } from "./service";
+import { foodLookup } from "./lookup";
 interface Env {
+  FDC_API_KEY?: string;
   MAKER_USERS: DurableObjectNamespace<MakerUser>;
   OPENAI_API_KEY: string;
   OPENAI_MODEL: string;
@@ -41,6 +43,23 @@ export class MakerUser extends DurableObject<Env> {
       return json({ message: "Invalid JSON." }, 400);
     }
     const env = this.env;
+    if (new URL(request.url).pathname === "/food-lookup") {
+      const day = new Date().toISOString().slice(0, 10);
+      const usage = await this.ctx.storage.get<{ day: string; count: number }>(
+        "lookup-usage",
+      );
+      const count = usage?.day === day ? usage.count : 0;
+      if (count >= 100)
+        return json(
+          { message: "Daily lookup limit reached. Enter the label manually." },
+          429,
+        );
+      await this.ctx.storage.put("lookup-usage", { day, count: count + 1 });
+      return foodLookup(
+        (body as { barcode?: unknown })?.barcode,
+        env.FDC_API_KEY,
+      );
+    }
     return handleMaker(body, {
       store: {
         get: async <T>(key: string) => this.ctx.storage.get<T>(key),
@@ -89,14 +108,17 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     if (url.pathname === "/health") return json({ ok: true });
-    if (url.pathname !== "/drink-maker" || request.method !== "POST")
+    if (
+      !["/drink-maker", "/food-lookup"].includes(url.pathname) ||
+      request.method !== "POST"
+    )
       return json({ message: "Not found." }, 404);
     if (Number(request.headers.get("Content-Length") ?? 0) > 12000)
       return json({ message: "Request too large." }, 413);
     if (
       !env.SUPABASE_URL ||
       !env.SUPABASE_PUBLISHABLE_KEY ||
-      !env.OPENAI_API_KEY
+      (url.pathname === "/drink-maker" && !env.OPENAI_API_KEY)
     )
       return json(
         {
@@ -139,7 +161,7 @@ export default {
       "X-Verified-User": user,
     });
     return env.MAKER_USERS.get(env.MAKER_USERS.idFromName(user)).fetch(
-      new Request("https://maker.internal/drink-maker", {
+      new Request("https://maker.internal" + url.pathname, {
         method: "POST",
         headers,
         body: text,

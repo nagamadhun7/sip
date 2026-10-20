@@ -33,7 +33,8 @@ export function parseProduct(barcode: string, product: any): Drink {
       (({ ml: 1, cl: 10, l: 1000 } as Record<string, number>)[
         serving[2].toLowerCase()
       ] ?? 1)
-    : 250;
+    : Number(product.product_quantity) *
+        (quantityUnit === "l" ? 1000 : quantityUnit === "cl" ? 10 : 1) || 0;
   return {
     id: "barcode-" + barcode,
     barcode,
@@ -44,7 +45,7 @@ export function parseProduct(barcode: string, product: any): Drink {
         "Scanned drink",
     ).slice(0, 150),
     color: "#8AB5C7",
-    serving: servingMl > 0 && servingMl <= 10000 ? servingMl : 250,
+    serving: servingMl > 0 && servingMl <= 10000 ? servingMl : 0,
     nutrition: {
       sugar: number("sugars_100g"),
       caffeine: number("caffeine_100g", 1000),
@@ -58,6 +59,7 @@ export function parseProduct(barcode: string, product: any): Drink {
 export async function lookupBarcode(
   barcode: string,
   signal?: AbortSignal,
+  fallback?: (barcode: string) => Promise<Drink | null>,
 ): Promise<Drink | null> {
   if (!/^\d{8,14}$/.test(barcode)) throw Error("Enter an 8–14 digit barcode.");
   const abort = new AbortController();
@@ -78,13 +80,14 @@ export async function lookupBarcode(
     if (!result.ok)
       throw Error(`Product lookup failed (${result.status}). Try again later.`);
     const response = await result.json();
-    if (response.status !== 1) return null;
+    if (response.status !== 1) return fallback ? fallback(barcode) : null;
     return parseProduct(barcode, response.product);
   } catch (e) {
     if (abort.signal.aborted)
       throw Error(
         "Lookup timed out or was cancelled. Check your connection and try again.",
       );
+    if (fallback) return fallback(barcode);
     throw e;
   } finally {
     clearTimeout(timeout);
