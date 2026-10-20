@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import { useStore } from "../state/store";
 import { id, formatVolume } from "../lib/model";
 import { T, Input, Row, Button } from "../components/ui";
+import { LogInput } from "../components/log-input";
 export default function Add() {
   const { library, catalog, containers, saveEntry, settings } = useStore(),
     [notice, setNotice] = useState(""),
@@ -24,6 +25,7 @@ export default function Add() {
           <T size={28} bold>
             What did you drink?
           </T>
+          <LogInput />
           <Input
             label="Search drinks"
             value={query}

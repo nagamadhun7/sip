@@ -1,3 +1,5 @@
+import { handleParse, generateParsing } from "./parsing";
+import type { Dependencies } from "./service";
 import { DurableObject } from "cloudflare:workers";
 import type { CacheValue } from "./service";
 import { handleMaker, generateOpenAI, json } from "./service";
@@ -60,7 +62,7 @@ export class MakerUser extends DurableObject<Env> {
         env.FDC_API_KEY,
       );
     }
-    return handleMaker(body, {
+    const deps: Dependencies = {
       store: {
         get: async <T>(key: string) => this.ctx.storage.get<T>(key),
         put: async (key, value) => {
@@ -101,7 +103,14 @@ export class MakerUser extends DurableObject<Env> {
       },
       generate: (input) =>
         generateOpenAI(input, env.OPENAI_API_KEY, env.OPENAI_MODEL),
-    });
+    };
+    if (new URL(request.url).pathname === "/parse-drinks")
+      return handleParse(body, {
+        ...deps,
+        generate: (input) =>
+          generateParsing(input, env.OPENAI_API_KEY, env.OPENAI_MODEL),
+      });
+    return handleMaker(body, deps);
   }
 }
 export default {
@@ -109,16 +118,18 @@ export default {
     const url = new URL(request.url);
     if (url.pathname === "/health") return json({ ok: true });
     if (
-      !["/drink-maker", "/food-lookup"].includes(url.pathname) ||
+      !["/drink-maker", "/food-lookup", "/parse-drinks"].includes(
+        url.pathname,
+      ) ||
       request.method !== "POST"
     )
       return json({ message: "Not found." }, 404);
-    if (Number(request.headers.get("Content-Length") ?? 0) > 12000)
+    if (Number(request.headers.get("Content-Length") ?? 0) > 50000)
       return json({ message: "Request too large." }, 413);
     if (
       !env.SUPABASE_URL ||
       !env.SUPABASE_PUBLISHABLE_KEY ||
-      (url.pathname === "/drink-maker" && !env.OPENAI_API_KEY)
+      (url.pathname !== "/food-lookup" && !env.OPENAI_API_KEY)
     )
       return json(
         {
@@ -154,7 +165,7 @@ export default {
       );
     }
     const text = await request.text();
-    if (new TextEncoder().encode(text).length > 12000)
+    if (new TextEncoder().encode(text).length > 50000)
       return json({ message: "Request too large." }, 413);
     const headers = new Headers({
       "Content-Type": "application/json",

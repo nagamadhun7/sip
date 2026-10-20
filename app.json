@@ -53,7 +53,8 @@
       ],
       "expo-notifications",
       "expo-secure-store",
-      "./plugins/with-purchase-launch-mode"
+      "./plugins/with-purchase-launch-mode",
+      "expo-speech-recognition"
     ],
     "scheme": "sip",
     "extra": {

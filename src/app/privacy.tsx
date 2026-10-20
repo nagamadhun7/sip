@@ -51,13 +51,16 @@ export default function Privacy() {
         Drink maker and Pro
       </T>
       <T>
-        Lab runs offline. Goal sends your request, remaining limits, bedtime,
-        focus, age band, pregnancy/nursing status and dietary filters to the
-        recipe server and OpenAI when you tap Generate. Your drink history is
-        not sent. The server caches recipes for 30 days using a hash of the
-        request and context and keeps usage counters under an anonymous account
-        ID. OpenAI requests disable response storage; provider abuse monitoring
-        retention can still apply.
+        Lab and common typed drink matching run offline. Complex typed
+        descriptions and custom-drink text are sent to the recipe service and
+        OpenAI when you request a match or recipe. Voice uses the device speech
+        service and then the same matching flow. Goal sends your request,
+        remaining limits, bedtime, focus, age band, pregnancy/nursing status and
+        dietary filters to the recipe server and OpenAI when you tap Generate.
+        Your drink history is not sent. The server caches recipes for 30 days
+        using a hash of the request and context and keeps usage counters under
+        an anonymous account ID. OpenAI requests disable response storage;
+        provider abuse monitoring retention can still apply.
       </T>
       <T>
         Goal creates an anonymous session stored securely on this device. Pro

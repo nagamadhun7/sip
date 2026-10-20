@@ -11,6 +11,9 @@ import {
   nutrients,
   Nutrient,
   validateEntry,
+  totals,
+  onDay,
+  localDay,
 } from "../lib/model";
 import {
   Page,
@@ -21,6 +24,8 @@ import {
   ErrorText,
   colors,
 } from "../components/ui";
+import { requestRecipe } from "../drink-maker/client";
+import { buildContext, toDrink, adjustRecipe } from "../drink-maker/core";
 export default function DrinkForm() {
   const params = useLocalSearchParams<{
     drink?: string;
@@ -35,7 +40,7 @@ export default function DrinkForm() {
     base =
       existing?.drink ??
       [...store.library, ...store.catalog].find((d) => d.id === params.drink);
-  const [initial] = useState<Drink>(
+  const [initial, setInitial] = useState<Drink>(
     () =>
       base ?? {
         id: id(),
@@ -72,6 +77,7 @@ export default function DrinkForm() {
         ]),
       ) as Record<Nutrient, string>,
     ),
+    [description, setDescription] = useState(""),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
     [containerName, setContainerName] = useState(""),
@@ -95,13 +101,63 @@ export default function DrinkForm() {
       ...initial,
       name: name.trim(),
       serving: amount,
-      missingNutrition: [],
-      recipe: undefined,
+      missingNutrition: nutrients.every(
+        (k) => norm(nutrition[k]) === initial.nutrition[k],
+      )
+        ? initial.missingNutrition
+        : [],
+      recipe: nutrients.every(
+        (k) => norm(nutrition[k]) === initial.nutrition[k],
+      )
+        ? initial.recipe
+        : undefined,
       nutrition: Object.fromEntries(
         nutrients.map((k) => [k, norm(nutrition[k])]),
       ) as Drink["nutrition"],
     },
   });
+  async function fromText() {
+    setBusy(true);
+    setError("");
+    try {
+      if (!Number.isFinite(amount) || amount < 50 || amount > 1000)
+        throw Error("Choose an amount from 50 to 1,000 ml first.");
+      const input = {
+        request: description,
+        size_ml: amount,
+        filters: { dairy_free: false, vegan: false, caffeine_free: false },
+        context: buildContext(
+          store.settings,
+          store.entries,
+          totals(onDay(store.entries, localDay())),
+        ),
+      };
+      const response = await requestRecipe(input, new AbortController().signal);
+      const adjusted = adjustRecipe(response.recipe, input);
+      const drink = toDrink(
+        adjusted.recipe,
+        initial.id,
+        initial.color,
+        "glass",
+      );
+      setInitial(drink);
+      setName(drink.name);
+      setMl(String(+(drink.serving / factor).toFixed(3)));
+      setNutrition(
+        Object.fromEntries(
+          nutrients.map((k) => [
+            k,
+            drink.nutrition[k] === null ? "" : String(drink.nutrition[k]),
+          ]),
+        ) as Record<Nutrient, string>,
+      );
+      if (!adjusted.met) setError(adjusted.warnings.join(" "));
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
   async function save(onlyLibrary = false) {
     if (busy) return;
     setBusy(true);
@@ -263,6 +319,26 @@ export default function DrinkForm() {
             <Button secondary title="Done" onPress={() => setPicker(null)} />
           ) : null}
         </View>
+      ) : null}
+      {!existing ? (
+        <>
+          <Input
+            label="Build custom drink from text"
+            value={description}
+            onChangeText={setDescription}
+            placeholder="Iced vanilla oat latte"
+          />
+          <Button
+            secondary
+            title="Build recipe from text"
+            disabled={busy || !description.trim()}
+            onPress={() => void fromText()}
+          />
+          <T size={12} muted>
+            Shares this request and your selected profile context with the
+            recipe service. Nutrition is calculated from ingredient data.
+          </T>
+        </>
       ) : null}
       <View style={{ gap: 5 }}>
         <T size={20} bold>
