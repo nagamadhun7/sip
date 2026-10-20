@@ -22,8 +22,14 @@ export default function Targets() {
     const update: any = { ...settings };
     for (const k of keys) {
       const n = Number(values[k].replace(",", "."));
-      if (!Number.isFinite(n) || n <= 0 || n > 100000) {
-        setError("Enter a target greater than zero and below 100,000.");
+      if (
+        !Number.isFinite(n) ||
+        (k === "water" ? n <= 0 : n < 0) ||
+        n > 100000
+      ) {
+        setError(
+          "Enter a nonnegative target below 100,000; fluid target must exceed zero.",
+        );
         return;
       }
       update[k] = n;

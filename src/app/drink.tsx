@@ -3,7 +3,7 @@ import { View, Pressable, Alert, Platform } from "react-native";
 import { router, useLocalSearchParams, Stack } from "expo-router";
 import { DateTimePicker } from "@expo/ui/community/datetime-picker";
 import { useStore } from "../state/store";
-import { drinks } from "../data/drinks";
+
 import {
   Drink,
   Entry,
@@ -33,7 +33,7 @@ export default function DrinkForm() {
   const existing = store.entries.find((e) => e.id === params.entry),
     base =
       existing?.drink ??
-      [...store.library, ...drinks].find((d) => d.id === params.drink);
+      [...store.library, ...store.catalog].find((d) => d.id === params.drink);
   const [initial] = useState<Drink>(
     () =>
       base ?? {
@@ -53,7 +53,14 @@ export default function DrinkForm() {
       },
   );
   const [name, setName] = useState(initial.name),
-    [ml, setMl] = useState(String(existing?.ml ?? initial.serving)),
+    [ml, setMl] = useState(
+      String(
+        +(
+          (existing?.ml ?? initial.serving) /
+          (store.settings.units === "oz" ? 29.5735295625 : 1)
+        ).toFixed(3),
+      ),
+    ),
     [at, setAt] = useState(() => new Date(existing?.at ?? Date.now())),
     [nutrition, setNutrition] = useState(
       Object.fromEntries(
@@ -65,6 +72,7 @@ export default function DrinkForm() {
     ),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
+    [containerName, setContainerName] = useState(""),
     [picker, setPicker] = useState<"date" | "time" | null>(null);
   const unit = {
     sugar: "g",
@@ -73,7 +81,8 @@ export default function DrinkForm() {
     sodium: "mg",
     potassium: "mg",
   };
-  const amount = Number(ml.replace(",", "."));
+  const factor = store.settings.units === "oz" ? 29.5735295625 : 1;
+  const amount = Number(ml.replace(",", ".")) * factor;
   const norm = (s: string) =>
     s.trim() === "" ? null : Number(s.replace(",", "."));
   const draft = (): Entry => ({
@@ -84,6 +93,8 @@ export default function DrinkForm() {
       ...initial,
       name: name.trim(),
       serving: amount,
+      missingNutrition: [],
+      recipe: undefined,
       nutrition: Object.fromEntries(
         nutrients.map((k) => [k, norm(nutrition[k])]),
       ) as Drink["nutrition"],
@@ -98,6 +109,15 @@ export default function DrinkForm() {
       validateEntry(entry);
       if (onlyLibrary || !base || params.custom)
         await store.saveDrink({ ...entry.drink, id: base?.id ?? initial.id });
+      if (containerName.trim()) {
+        await store.saveDrink(entry.drink);
+        await store.saveContainer({
+          id: id(),
+          name: containerName.trim(),
+          drink_id: entry.drink.id,
+          ml: entry.ml,
+        });
+      }
       if (!onlyLibrary) await store.saveEntry(entry);
       router.dismissAll();
       router.replace("/");
@@ -164,7 +184,9 @@ export default function DrinkForm() {
       <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 18 }}>
         <Pressable
           accessibilityLabel="Decrease amount"
-          onPress={() => setMl(String(Math.max(1, amount - 50)))}
+          onPress={() =>
+            setMl(String(+(Math.max(1, amount - 50) / factor).toFixed(3)))
+          }
           style={{
             padding: 16,
             borderWidth: 1,
@@ -175,11 +197,18 @@ export default function DrinkForm() {
           <T size={22}>−</T>
         </Pressable>
         <View style={{ flex: 1 }}>
-          <Input numeric label="Amount (ml)" value={ml} onChangeText={setMl} />
+          <Input
+            numeric
+            label={`Amount (${store.settings.units === "oz" ? "US fl oz" : "ml"})`}
+            value={ml}
+            onChangeText={setMl}
+          />
         </View>
         <Pressable
           accessibilityLabel="Increase amount"
-          onPress={() => setMl(String(Math.min(10000, amount + 50)))}
+          onPress={() =>
+            setMl(String(+(Math.min(10000, amount + 50) / factor).toFixed(3)))
+          }
           style={{
             padding: 16,
             borderWidth: 1,
@@ -251,7 +280,7 @@ export default function DrinkForm() {
               Number.isFinite(norm(nutrition[k])) &&
               Number.isFinite(amount)
                 ? +((Number(norm(nutrition[k])) * amount) / 100).toFixed(1)
-                : "—"}
+                : "not listed"}
             </T>
             <T size={12} muted>
               {unit[k]} in drink
@@ -259,6 +288,12 @@ export default function DrinkForm() {
           </View>
         </View>
       ))}
+      <Input
+        label="Save as container (optional name)"
+        value={containerName}
+        onChangeText={setContainerName}
+        placeholder="My bottle"
+      />
       <ErrorText error={error} />
       {!existing ? (
         <Button

@@ -9,6 +9,9 @@ export default function Balance() {
   return (
     <Page>
       <T muted>Today, from your drinks</T>
+      {!onDay(entries, localDay()).length ? (
+        <T>No drinks logged today. Add a drink to begin.</T>
+      ) : null}
       {(["water", "caffeine", "sugar", "sodium", "potassium"] as const).map(
         (k) => {
           const target = settings[k],
@@ -34,7 +37,7 @@ export default function Balance() {
                 </T>
               </T>
               <Bar
-                value={value / target}
+                value={target > 0 ? value / target : value > 0 ? 1 : 0}
                 color={
                   k === "sugar"
                     ? colors.peach

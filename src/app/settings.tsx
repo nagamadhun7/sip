@@ -60,12 +60,27 @@ export default function SettingsScreen() {
   return (
     <Page>
       <Row
+        title="Your profile"
+        detail="Age, weight, sex and status"
+        onPress={() =>
+          router.push({ pathname: "/onboarding", params: { edit: "1" } })
+        }
+      />
+      <Row
         title="Daily targets"
         detail="Fluid intake, caffeine, sugar and more"
         onPress={() => router.push("/targets")}
       />
-      <Row title="My drinks" detail="Saved drinks and Drink maker" onPress={()=>router.push("/my-drinks")}/>
-      <Row title="Drink maker profile" detail="Age band, dietary and personal limits" onPress={()=>router.push("/maker-profile")}/>
+      <Row
+        title="My drinks"
+        detail="Saved drinks and Drink maker"
+        onPress={() => router.push("/my-drinks")}
+      />
+      <Row
+        title="Drink maker profile"
+        detail="Age band, dietary and personal limits"
+        onPress={() => router.push("/maker-profile")}
+      />
       <T size={13} muted>
         Home screen focus
       </T>

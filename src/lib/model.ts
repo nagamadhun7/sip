@@ -22,6 +22,7 @@ export type Drink = {
 };
 export type Entry = { id: string; drink: Drink; ml: number; at: string };
 export type Settings = {
+  profile?: import("./tracking").UserProfile;
   onboarded: boolean;
   makerProfile?: Profile;
   focus: "water" | "sugar" | "caffeine";

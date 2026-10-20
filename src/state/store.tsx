@@ -2,7 +2,7 @@ import React, { createContext, use, useEffect, useState } from "react";
 import { ActivityIndicator, Text, View, Pressable } from "react-native";
 import { Drink, Entry, Settings, defaults } from "../lib/model";
 import * as storage from "../lib/database";
-type State = { entries: Entry[]; library: Drink[]; settings: Settings };
+type State = Awaited<ReturnType<typeof storage.load>>;
 type Store = State & {
   saveEntry: (e: Entry) => Promise<void>;
   saveEntries: (entries: Entry[]) => Promise<void>;
@@ -10,11 +10,16 @@ type Store = State & {
   saveDrink: (d: Drink) => Promise<void>;
   saveSettings: (s: Settings) => Promise<void>;
   erase: () => Promise<void>;
+  saveContainer: (c: import("../lib/tracking").Container) => Promise<void>;
+  undo: () => Promise<void>;
 };
 const Context = createContext<Store | null>(null);
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<State>({
       entries: [],
+      catalog: [],
+      containers: [],
+      undoLabel: "",
       library: [],
       settings: defaults,
     }),
@@ -55,43 +60,35 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     ...state,
     saveEntries: async (entries) => {
       await storage.putEntries(entries);
-      setState((s) => ({
-        ...s,
-        entries: [...entries, ...s.entries].sort((a, b) =>
-          b.at.localeCompare(a.at),
-        ),
-      }));
+      await hydrate();
     },
     saveEntry: async (e) => {
       await storage.putEntry(e);
-      setState((s) => ({
-        ...s,
-        entries: [e, ...s.entries.filter((v) => v.id !== e.id)].sort((a, b) =>
-          b.at.localeCompare(a.at),
-        ),
-      }));
+      await hydrate();
     },
-    removeEntry: async (id) => {
-      await storage.deleteEntry(id);
-      setState((s) => ({
-        ...s,
-        entries: s.entries.filter((e) => e.id !== id),
-      }));
+    removeEntry: async (key) => {
+      await storage.deleteEntry(key);
+      await hydrate();
     },
     saveDrink: async (d) => {
       await storage.putDrink(d);
-      setState((s) => ({
-        ...s,
-        library: [d, ...s.library.filter((v) => v.id !== d.id)],
-      }));
+      await hydrate();
     },
     saveSettings: async (settings) => {
       await storage.putSettings(settings);
-      setState((s) => ({ ...s, settings }));
+      await hydrate();
+    },
+    saveContainer: async (c) => {
+      await storage.putContainer(c);
+      await hydrate();
+    },
+    undo: async () => {
+      await storage.undoLastChange();
+      await hydrate();
     },
     erase: async () => {
       await storage.erase();
-      setState({ entries: [], library: [], settings: defaults });
+      await hydrate();
     },
   };
   if (!ready)

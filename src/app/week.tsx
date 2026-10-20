@@ -60,6 +60,9 @@ export default function Week() {
             <T>›</T>
           </Pressable>
         </View>
+        {!entries.some((e) => days.includes(localDay(e.at))) ? (
+          <T muted>No drinks logged in this period.</T>
+        ) : null}
         <View>
           <T size={52} bold>
             {formatVolume(data.water / 7, settings.units)}
@@ -119,7 +122,13 @@ export default function Week() {
                 }
               />
               <Bar
-                value={data[k] / 7 / settings[k]}
+                value={
+                  settings[k] > 0
+                    ? data[k] / 7 / settings[k]
+                    : data[k] > 0
+                      ? 1
+                      : 0
+                }
                 color={
                   k === "sugar"
                     ? colors.peach

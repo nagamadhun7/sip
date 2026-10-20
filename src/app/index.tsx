@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { View, Pressable, ScrollView } from "react-native";
 import { Redirect, router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStore } from "../state/store";
 import { localDay, onDay, totals, formatVolume, id } from "../lib/model";
-import { drinks } from "../data/drinks";
+import { quickHistory } from "../lib/tracking";
 import { useToday } from "../lib/use-today";
 import {
   T,
@@ -18,24 +18,29 @@ import {
   Button,
 } from "../components/ui";
 export default function Today() {
-  const { entries, settings, saveEntry, saveEntries } = useStore(),
+  const { entries, settings, saveEntry, saveEntries, undoLabel, undo } =
+      useStore(),
     safe = useSafeAreaInsets();
   const [error, setError] = useState(""),
     [pending, setPending] = useState(false),
     day = useToday();
+  const lock = useRef(false);
+  const quicks = quickHistory(entries);
   if (!settings.onboarded) return <Redirect href="/onboarding" />;
   const today = onDay(entries, day),
     sum = totals(today);
   const quick = async (index: number) => {
-    if (pending) return;
+    if (lock.current) return;
+    lock.current = true;
     setPending(true);
     setError("");
-    const drink = drinks[index];
+    const previous = quicks[index];
+    const drink = previous.drink;
     try {
       await saveEntry({
         id: id(),
         drink,
-        ml: drink.serving,
+        ml: previous.ml,
         at: new Date().toISOString(),
       });
     } catch (e) {
@@ -43,11 +48,12 @@ export default function Today() {
         e instanceof Error ? e.message : "Could not save. Please try again.",
       );
     } finally {
+      lock.current = false;
       setPending(false);
     }
   };
   const repeatYesterday = async () => {
-    if (pending) return;
+    if (lock.current) return;
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     const records = onDay(entries, localDay(yesterday));
@@ -55,6 +61,7 @@ export default function Today() {
       setError("No drinks were logged yesterday. Choose a drink to add.");
       return;
     }
+    lock.current = true;
     setPending(true);
     setError("");
     try {
@@ -64,6 +71,7 @@ export default function Today() {
     } catch {
       setError("Could not repeat yesterday. Please try again.");
     } finally {
+      lock.current = false;
       setPending(false);
     }
   };
@@ -92,7 +100,7 @@ export default function Today() {
         </View>
         {settings.focus === "water" ? (
           <Pressable
-            accessibilityLabel="Hydration balance"
+            accessibilityLabel={`Hydration balance, ${formatVolume(sum.water, settings.units)} of ${formatVolume(settings.water, settings.units)}`}
             onPress={() => router.push("/balance")}
             style={{
               flexDirection: "row",
@@ -141,13 +149,19 @@ export default function Today() {
               {settings.focus === "sugar" ? "g" : "mg"} limit
             </T>
             <Bar
-              value={sum[settings.focus] / settings[settings.focus]}
+              value={
+                settings[settings.focus] > 0
+                  ? sum[settings.focus] / settings[settings.focus]
+                  : sum[settings.focus] > 0
+                    ? 1
+                    : 0
+              }
               color={settings.focus === "sugar" ? colors.peach : colors.brown}
             />
           </Pressable>
         )}
         <View style={{ flexDirection: "row", gap: 12 }}>
-          {[0, 1].map((idx) => (
+          {quicks.map((previous, idx) => (
             <Pressable
               key={idx}
               accessibilityRole="button"
@@ -168,13 +182,13 @@ export default function Today() {
                     width: 10,
                     height: 10,
                     borderRadius: 5,
-                    backgroundColor: drinks[idx].color,
+                    backgroundColor: previous.drink.color,
                   }}
                 />
-                <T>{drinks[idx].name}</T>
+                <T>{previous.drink.name}</T>
               </View>
               <T size={13} muted>
-                {formatVolume(drinks[idx].serving, settings.units)}
+                {formatVolume(previous.ml, settings.units)}
               </T>
             </Pressable>
           ))}
@@ -196,8 +210,20 @@ export default function Today() {
           </Pressable>
         </View>
         <ErrorText error={error} />
+        {undoLabel ? (
+          <View style={{ gap: 8 }}>
+            <T muted>{undoLabel}</T>
+            <Button
+              secondary
+              title="Undo last change"
+              onPress={() =>
+                void undo().catch(() => setError("Could not undo. Retry."))
+              }
+            />
+          </View>
+        ) : null}
         <View style={{ flexDirection: "row", gap: 24 }}>
-          {(["caffeine", "sugar"] as const).map((k) => (
+          {(["caffeine", "sugar", "calories"] as const).map((k) => (
             <Pressable
               key={k}
               onPress={() =>
@@ -206,19 +232,27 @@ export default function Today() {
               style={{ flex: 1 }}
             >
               <T size={13} muted>
-                {k === "sugar" ? "Sugar" : "Caffeine"}
+                {k === "sugar"
+                  ? "Sugar"
+                  : k === "calories"
+                    ? "Calories"
+                    : "Caffeine"}
               </T>
               <T size={28} bold>
                 {Math.round(sum[k])}
                 <T size={14} muted>
                   {" "}
-                  {k === "sugar" ? "g" : "mg"}
+                  {k === "sugar" ? "g" : k === "calories" ? "kcal" : "mg"}
                 </T>
               </T>
-              <Bar
-                value={sum[k] / settings[k]}
-                color={k === "sugar" ? colors.peach : colors.brown}
-              />
+              {k !== "calories" ? (
+                <Bar
+                  value={
+                    settings[k] > 0 ? sum[k] / settings[k] : sum[k] > 0 ? 1 : 0
+                  }
+                  color={k === "sugar" ? colors.peach : colors.brown}
+                />
+              ) : null}
               {sum.missing[k] > 0 ? (
                 <T size={11} muted>
                   {sum.missing[k]} drink(s) missing data
@@ -232,7 +266,10 @@ export default function Today() {
             <T size={24} bold>
               Add your first drink
             </T>
-            <T muted>Tap the plus, scan a can, or choose a quick add above.</T>
+            <T muted>
+              Tap the plus or scan a drink. Your recent drinks appear here after
+              you log.
+            </T>
             <Button title="Add a drink" onPress={() => router.push("/add")} />
           </View>
         ) : (

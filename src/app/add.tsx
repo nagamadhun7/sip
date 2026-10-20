@@ -2,12 +2,14 @@ import React, { useState } from "react";
 import { View, FlatList } from "react-native";
 import { router } from "expo-router";
 import { useStore } from "../state/store";
-import { drinks } from "../data/drinks";
+import { id, formatVolume } from "../lib/model";
 import { T, Input, Row, Button } from "../components/ui";
 export default function Add() {
-  const { library } = useStore(),
+  const { library, catalog, containers, saveEntry, settings } = useStore(),
+    [notice, setNotice] = useState(""),
+    [busy, setBusy] = useState(false),
     [query, setQuery] = useState("");
-  const list = [...library, ...drinks].filter((d) =>
+  const list = [...library, ...catalog].filter((d) =>
     d.name.toLowerCase().includes(query.toLowerCase()),
   );
   return (
@@ -46,8 +48,51 @@ export default function Add() {
               />
             </View>
           </View>
-          <Row title="Drink maker" detail="Goal or Lab" onPress={()=>router.push("/drink-maker")}/>
-          <Row title="My drinks" detail="Saved drinks and recipes" onPress={()=>router.push("/my-drinks")}/>
+          <Row
+            title="Drink maker"
+            detail="Goal or Lab"
+            onPress={() => router.push("/drink-maker")}
+          />
+          <Row
+            title="My drinks"
+            detail="Saved drinks and recipes"
+            onPress={() => router.push("/my-drinks")}
+          />
+          {notice ? <T>{notice}</T> : null}
+          {containers.map((c) => (
+            <Row
+              key={c.id}
+              title={c.name}
+              detail={formatVolume(c.ml, settings.units)}
+              onPress={
+                busy
+                  ? undefined
+                  : async () => {
+                      setBusy(true);
+                      try {
+                        const drink = [...library, ...catalog].find(
+                          (d) => d.id === c.drink_id,
+                        );
+                        if (!drink)
+                          throw Error(
+                            "This container needs its drink selected again.",
+                          );
+                        await saveEntry({
+                          id: id(),
+                          drink,
+                          ml: c.ml,
+                          at: new Date().toISOString(),
+                        });
+                        setNotice(`${c.name} logged.`);
+                      } catch (e) {
+                        setNotice((e as Error).message);
+                      } finally {
+                        setBusy(false);
+                      }
+                    }
+              }
+            />
+          ))}
           {library.length ? (
             <T size={13} muted>
               Your saved drinks and everyday drinks
@@ -56,14 +101,40 @@ export default function Add() {
         </View>
       }
       renderItem={({ item }) => (
-        <Row
-          title={item.name}
-          detail={item.source}
-          dot={item.color}
-          onPress={() =>
-            router.push({ pathname: "/drink", params: { drink: item.id } })
-          }
-        />
+        <View>
+          <Row
+            title={item.name}
+            detail={item.source}
+            dot={item.color}
+            onPress={
+              busy
+                ? undefined
+                : async () => {
+                    setBusy(true);
+                    try {
+                      await saveEntry({
+                        id: id(),
+                        drink: item,
+                        ml: item.serving,
+                        at: new Date().toISOString(),
+                      });
+                      setNotice(`${item.name} logged.`);
+                    } catch (e) {
+                      setNotice((e as Error).message);
+                    } finally {
+                      setBusy(false);
+                    }
+                  }
+            }
+          />
+          <Button
+            secondary
+            title={`Edit ${item.name}`}
+            onPress={() =>
+              router.push({ pathname: "/drink", params: { drink: item.id } })
+            }
+          />
+        </View>
       )}
       ListEmptyComponent={
         <View style={{ gap: 16, paddingTop: 24 }}>
