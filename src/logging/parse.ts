@@ -80,7 +80,7 @@ export function parseLocal(
     .toLowerCase()
     .replace(/\b(one|a|an)\b/g, "1")
     .replace(/\btwo\b/g, "2")
-    .split(/\s*(?:,|;|\band\b|\bthen\b)\s*/)
+    .split(/\s*(?:\r?\n|,|;|\band\b|\bthen\b)\s*/)
     .filter(Boolean);
   if (!clauses.length || clauses.length > 20) return null;
   const result: ParsedLog[] = [];

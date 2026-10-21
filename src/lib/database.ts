@@ -23,7 +23,8 @@ CREATE TABLE IF NOT EXISTS ingredients(id TEXT PRIMARY KEY NOT NULL,payload TEXT
 CREATE TABLE IF NOT EXISTS containers(id TEXT PRIMARY KEY NOT NULL,payload TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS undo_change(id INTEGER PRIMARY KEY CHECK(id=1),payload TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS profile(id INTEGER PRIMARY KEY CHECK(id=1),payload TEXT NOT NULL);
-PRAGMA user_version=2;`);
+CREATE TABLE IF NOT EXISTS journal_draft(id INTEGER PRIMARY KEY CHECK(id=1),text TEXT NOT NULL);
+PRAGMA user_version=3;`);
     await d.withExclusiveTransactionAsync(async (tx) => {
       for (const ingredient of ingredientData.ingredients)
         await tx.runAsync(
@@ -100,7 +101,11 @@ export async function load() {
     undoLabel: undo ? (JSON.parse(undo.payload) as Undo).label : "",
   };
 }
-export async function changeEntries(entries: Entry[], remove: string[] = []) {
+export async function changeEntries(
+  entries: Entry[],
+  remove: string[] = [],
+  consumeDraft = false,
+) {
   entries.forEach(validateEntry);
   const d = await db();
   await d.withExclusiveTransactionAsync(async (tx) => {
@@ -134,7 +139,42 @@ export async function changeEntries(entries: Entry[], remove: string[] = []) {
         e.at,
         JSON.stringify(e),
       );
+    if (consumeDraft) await tx.runAsync("DELETE FROM journal_draft");
   });
+}
+let draftWrites: Promise<unknown> = Promise.resolve();
+export async function loadJournalDraft() {
+  await draftWrites.catch(() => {});
+  return (
+    (
+      await (
+        await db()
+      ).getFirstAsync<{ text: string }>(
+        "SELECT text FROM journal_draft WHERE id=1",
+      )
+    )?.text ?? ""
+  );
+}
+export function saveJournalDraft(text: string) {
+  const task = draftWrites
+    .catch(() => {})
+    .then(async () => {
+      if (text.length > 1000)
+        throw Error("Keep the note under 1,000 characters.");
+      await (
+        await db()
+      ).runAsync(
+        "INSERT OR REPLACE INTO journal_draft(id,text) VALUES(1,?)",
+        text,
+      );
+    });
+  draftWrites = task;
+  return task;
+}
+export async function putJournalEntries(entries: Entry[]) {
+  await draftWrites;
+  if (!entries.length) throw Error("Review at least one drink before saving.");
+  await changeEntries(entries, [], true);
 }
 export const putEntry = (e: Entry) => changeEntries([e]);
 export const putEntries = (e: Entry[]) => changeEntries(e);
@@ -207,6 +247,7 @@ export async function erase() {
       "action_receipts",
       "health_links",
       "health_pending",
+      "journal_draft",
     ])
       await tx.runAsync(`DELETE FROM ${table}`);
     await tx.runAsync(

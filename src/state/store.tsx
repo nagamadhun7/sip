@@ -26,6 +26,7 @@ type State = Awaited<ReturnType<typeof storage.load>>;
 type Store = State & {
   saveEntry: (e: Entry) => Promise<void>;
   saveEntries: (entries: Entry[]) => Promise<void>;
+  saveJournalEntries: (entries: Entry[]) => Promise<void>;
   removeEntry: (id: string) => Promise<void>;
   saveDrink: (d: Drink) => Promise<void>;
   saveSettings: (s: Settings) => Promise<void>;
@@ -118,6 +119,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     serviceError: error,
     saveEntries: async (entries) => {
       await storage.putEntries(entries);
+      await hydrate();
+    },
+    saveJournalEntries: async (entries) => {
+      await storage.putJournalEntries(entries);
       await hydrate();
     },
     saveEntry: async (e) => {

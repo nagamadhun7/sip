@@ -1,33 +1,39 @@
-import {catalogDrinks} from "../lib/tracking";
+import { catalogDrinks } from "../lib/tracking";
 import React, { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import { router } from "expo-router";
 import { useStore } from "../state/store";
 import { Input, Button, T, Row, ErrorText } from "./ui";
+import { parseLocal, validateParsed } from "../logging/parse";
+import type { ReviewRow } from "../logging/review";
 import {
-  parseLocal,
-  validateParsed,
-  entriesFromParsed,
-} from "../logging/parse";
-import type { ParsedLog } from "../logging/parse";
+  reviewRows,
+  reviewEntries,
+  nutrientBreakdown,
+} from "../logging/review";
+import { loadJournalDraft, saveJournalDraft } from "../lib/database";
 import { checkRequest } from "../drink-maker/core";
 import { callService, MakerError } from "../drink-maker/client";
 import { startVoice } from "../logging/voice";
-import { id, formatVolume } from "../lib/model";
+import { id, formatVolume, totals, nutrients } from "../lib/model";
 export function LogInput() {
   const store = useStore(),
-    [open, setOpen] = useState(false),
+    [open, setOpen] = useState(true),
     [text, setText] = useState(""),
-    [review, setReview] = useState<ParsedLog[]>([]),
+    [review, setReview] = useState<ReviewRow[]>([]),
     [busy, setBusy] = useState(false),
     [listening, setListening] = useState(false),
     [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
-    [paywall, setPaywall] = useState(false);
+    [paywall, setPaywall] = useState(false),
+    [draftReady, setDraftReady] = useState(false),
+    [draftStatus, setDraftStatus] = useState("Loading draft…"),
+    [method, setMethod] = useState(""),
+    [details, setDetails] = useState<number | null>(null);
   const cleanup = useRef<null | (() => void)>(null),
     lock = useRef(false),
     controller = useRef<AbortController | null>(null);
-  const catalog = catalogDrinks(store.library,store.catalog);
+  const catalog = catalogDrinks(store.library, store.catalog);
   useEffect(
     () => () => {
       cleanup.current?.();
@@ -35,6 +41,61 @@ export function LogInput() {
     },
     [],
   );
+  useEffect(() => {
+    let active = true;
+    void loadJournalDraft().then(
+      (saved) => {
+        if (active) {
+          setText(saved);
+          setDraftReady(true);
+          setDraftStatus(saved ? "Draft saved on this device" : "");
+        }
+      },
+      () => {
+        if (active)
+          setError("Could not load your draft. Reopen Add a drink to retry.");
+      },
+    );
+    return () => {
+      active = false;
+    };
+  }, []);
+  const draftRevision = useRef(0);
+  function writeNote(value: string) {
+    const revision = ++draftRevision.current;
+    setText(value);
+    setReview([]);
+    setError("");
+    setNotice("");
+    setDraftStatus("Saving draft…");
+    void saveJournalDraft(value).then(
+      () => {
+        if (revision === draftRevision.current)
+          setDraftStatus(value ? "Draft saved on this device" : "");
+      },
+      () => {
+        if (revision === draftRevision.current)
+          setDraftStatus(
+            "Draft could not be saved. Keep this screen open and retry.",
+          );
+      },
+    );
+  }
+  let preview: ReturnType<typeof reviewEntries> = [];
+  let previewError = "";
+  if (review.length) {
+    try {
+      preview = reviewEntries(
+        review,
+        catalog,
+        store.settings.units,
+        () => "preview",
+      );
+    } catch (e) {
+      previewError = (e as Error).message;
+    }
+  }
+  const sum = totals(preview);
   async function voice() {
     setOpen(true);
     setError("");
@@ -47,8 +108,7 @@ export function LogInput() {
     try {
       cleanup.current = await startVoice(
         (transcript) => {
-          setText(transcript);
-          setReview([]);
+          writeNote(transcript);
         },
         () => setListening(false),
         (message) => {
@@ -72,6 +132,7 @@ export function LogInput() {
     const now = new Date();
     try {
       let result = parseLocal(text, catalog, store.containers, now);
+      const local = result !== null;
       if (!result) {
         const safe = checkRequest(text);
         if (!safe.ok) throw Error(safe.message);
@@ -94,7 +155,13 @@ export function LogInput() {
         throw Error(
           "Please describe a drink and amount, or enter it manually.",
         );
-      setReview(result);
+      setReview(reviewRows(result, store.settings.units));
+      setDetails(null);
+      setMethod(
+        local
+          ? "Matched on your device"
+          : "Matched by AI; nutrition comes from your saved drink data",
+      );
     } catch (e) {
       setError((e as Error).message);
       setPaywall(e instanceof MakerError && e.paywall);
@@ -109,11 +176,12 @@ export function LogInput() {
     setBusy(true);
     setError("");
     try {
-      const rows = entriesFromParsed(review, catalog, id);
-      await store.saveEntries(rows);
+      const rows = reviewEntries(review, catalog, store.settings.units, id);
+      await store.saveJournalEntries(rows);
       setNotice(`${rows.length} drink${rows.length === 1 ? "" : "s"} logged.`);
       setReview([]);
       setText("");
+      setDraftStatus("");
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -124,48 +192,140 @@ export function LogInput() {
   return (
     <View style={{ gap: 12 }}>
       <View style={{ flexDirection: "row", gap: 8 }}>
-        <Button secondary title="Type it" onPress={() => setOpen((v) => !v)} />
+        <Button
+          secondary
+          title={open ? "Hide note" : "Write a note"}
+          onPress={() => setOpen((v) => !v)}
+        />
         <Button
           secondary
           title={listening ? "Stop listening" : "Voice log"}
           onPress={() => void voice()}
-          disabled={busy}
+          disabled={busy || !draftReady}
         />
       </View>
       {open ? (
         <>
           <Input
-            label="Describe what you drank"
+            label="Your drink note"
+            multiline
+            editable={draftReady && !busy && !listening}
+            maxLength={1000}
             value={text}
-            onChangeText={(value) => {
-              setText(value);
-              setReview([]);
-              setError("");
-            }}
-            placeholder="250 ml water and a coffee at 2 pm"
+            onChangeText={writeNote}
+            placeholder={"250 ml water\nA coffee at 2 pm"}
           />
+          {draftStatus ? (
+            <T size={12} muted>
+              {draftStatus}
+            </T>
+          ) : null}
           <T size={12} muted>
-            Common drinks are matched on this phone. Other descriptions are sent
-            to the recipe service only when you tap Match drinks. Voice uses
-            your device’s speech service.
+            Write one drink per line, or describe several together. Common
+            drinks are matched on this phone. Other descriptions are sent to the
+            recipe service only when you tap Match drinks. Voice uses your
+            device’s speech service.
           </T>
           <Button
             title="Match drinks"
-            disabled={busy || !text.trim() || listening}
+            disabled={busy || !draftReady || !text.trim() || listening}
             onPress={() => void match()}
           />
-          {review.map((p, index) => (
-            <Row
-              key={index}
-              title={catalog.find((d) => d.id === p.drink_id)?.name ?? ""}
-              detail={new Date(p.at).toLocaleString()}
-              value={formatVolume(p.amount_ml, store.settings.units)}
-            />
-          ))}
+          {review.length ? (
+            <T size={13} muted>
+              {method}. Check portions before saving.
+            </T>
+          ) : null}
+          {review.map((p, index) => {
+            const drink = catalog.find((d) => d.id === p.drink_id)!;
+            const ml = preview[index]?.ml;
+            return (
+              <View key={index} style={{ gap: 10 }}>
+                <Row
+                  title={drink.name}
+                  detail={new Date(p.at).toLocaleString()}
+                />
+                <Input
+                  label={`${drink.name} amount (${store.settings.units === "oz" ? "fl oz" : "ml"})`}
+                  numeric
+                  editable={!busy}
+                  value={p.portion}
+                  onChangeText={(portion) =>
+                    setReview((rows) =>
+                      rows.map((r, i) => (i === index ? { ...r, portion } : r)),
+                    )
+                  }
+                />
+                <View style={{ flexDirection: "row", gap: 8 }}>
+                  <Button
+                    secondary
+                    title={
+                      details === index ? "Hide calculation" : "How calculated"
+                    }
+                    onPress={() => setDetails(details === index ? null : index)}
+                  />
+                  <Button
+                    secondary
+                    title={`Remove ${drink.name}`}
+                    disabled={busy}
+                    onPress={() => {
+                      setReview((rows) => rows.filter((_, i) => i !== index));
+                      setDetails(null);
+                    }}
+                  />
+                </View>
+                {details === index ? (
+                  <View style={{ gap: 6 }}>
+                    <T size={12} muted>
+                      Source: {drink.source}. Estimates scale with the portion;
+                      AI does not supply nutrient values.
+                    </T>
+                    {nutrients.map((key) => {
+                      const value =
+                        ml === undefined
+                          ? null
+                          : nutrientBreakdown(drink, ml, key);
+                      const unit =
+                        key === "calories"
+                          ? "kcal"
+                          : key === "sugar"
+                            ? "g"
+                            : "mg";
+                      return (
+                        <T key={key} size={13}>
+                          {key}:{" "}
+                          {value
+                            ? `${+value.per100.toFixed(2)} ${unit} per 100 ml × ${+ml!.toFixed(2)} ml ÷ 100 = ${+value.amount.toFixed(2)} ${unit}`
+                            : "not listed"}
+                        </T>
+                      );
+                    })}
+                  </View>
+                ) : null}
+              </View>
+            );
+          })}
+          {preview.length ? (
+            <View style={{ gap: 6 }}>
+              <T bold>
+                Ready to log · {formatVolume(sum.water, store.settings.units)}
+              </T>
+              {nutrients.map((key) => (
+                <T key={key} size={13}>
+                  {key}:{" "}
+                  {sum.missing[key] === preview.length
+                    ? "not listed"
+                    : `${+sum[key].toFixed(2)} ${key === "calories" ? "kcal" : key === "sugar" ? "g" : "mg"}${sum.missing[key] ? " · some values not listed" : ""}`}
+                </T>
+              ))}
+            </View>
+          ) : null}
+          <ErrorText error={previewError} />
           {review.length ? (
             <Button
               title="Log matched drinks"
               busy={busy}
+              disabled={!!previewError || listening}
               onPress={() => void log()}
             />
           ) : null}

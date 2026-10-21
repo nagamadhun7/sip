@@ -200,6 +200,8 @@ export function Input({
   numeric = false,
   placeholder,
   multiline = false,
+  editable = true,
+  maxLength,
 }: {
   label: string;
   value: string;
@@ -207,6 +209,8 @@ export function Input({
   numeric?: boolean;
   placeholder?: string;
   multiline?: boolean;
+  editable?: boolean;
+  maxLength?: number;
 }) {
   return (
     <View style={{ gap: 6 }}>
@@ -221,6 +225,9 @@ export function Input({
         placeholder={placeholder}
         placeholderTextColor={colors.muted}
         multiline={multiline}
+        editable={editable}
+        maxLength={maxLength}
+        textAlignVertical={multiline ? "top" : "center"}
         style={{
           fontFamily: "Nunito_400Regular",
           fontSize: 18,
@@ -229,7 +236,7 @@ export function Input({
           paddingHorizontal: 0,
           borderBottomWidth: 1,
           borderColor: "#DDE2E6",
-          minHeight: 48,
+          minHeight: multiline ? 112 : 48,
         }}
       />
     </View>
