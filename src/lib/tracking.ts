@@ -1,3 +1,4 @@
+import { situationTarget } from "../features/situations.ts";
 import type { Entry, Settings, Drink } from "./model.ts";
 import { totals, onDay, localDay, caffeineNow } from "./model.ts";
 export type UserProfile = {
@@ -114,6 +115,7 @@ export function progress(
   settings: Settings,
   day = localDay(),
 ) {
+  settings={...settings,water:situationTarget(settings,day)};
   const rows = onDay(entries, day),
     sum = totals(rows),
     key = settings.focus;

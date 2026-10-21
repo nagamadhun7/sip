@@ -30,6 +30,7 @@ export type Entry = {
   health?: { platform: "ios" | "android"; id: string };
 };
 export type Settings = {
+  situation?: import("../features/situations").Situation;
   comparison?: [string,string];
   reminderPreferences?: import("./reminder-plan").ReminderPreferences;
   aiAccess?: {

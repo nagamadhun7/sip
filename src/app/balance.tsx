@@ -1,10 +1,12 @@
+import { situationTarget } from "../features/situations";
 import React from "react";
 import { View } from "react-native";
 import { useStore } from "../state/store";
 import { localDay, onDay, totals, formatVolume } from "../lib/model";
 import { Page, T, Bar, colors } from "../components/ui";
 export default function Balance() {
-  const { entries, settings } = useStore(),
+  const { entries, settings: baseSettings } = useStore(),
+    settings={...baseSettings,water:situationTarget(baseSettings)},
     sum = totals(onDay(entries, localDay()));
   return (
     <Page>

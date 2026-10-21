@@ -1,3 +1,4 @@
+import { SituationControls } from "../components/situation-controls";
 import React, { useState } from "react";
 import { Linking } from "react-native";
 import { Host, Switch } from "@expo/ui";
@@ -64,6 +65,7 @@ export default function SettingsScreen() {
   }
   return (
     <Page>
+      <SituationControls />
       <Row
         title="Your profile"
         detail="Age, weight, sex and status"

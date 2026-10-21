@@ -1,3 +1,4 @@
+import { situationTarget } from "../features/situations";
 import { DrinkIcon } from "../components/drink-icon";
 import React, { useState, useRef } from "react";
 import { View, Pressable, ScrollView } from "react-native";
@@ -19,13 +20,14 @@ import {
   Button,
 } from "../components/ui";
 export default function Today() {
-  const { entries, settings, saveEntry, saveEntries, undoLabel, undo } =
+  const { entries, settings: baseSettings, saveEntry, saveEntries, undoLabel, undo } =
       useStore(),
     safe = useSafeAreaInsets();
   const [error, setError] = useState(""),
     [pending, setPending] = useState(false),
     day = useToday();
   const lock = useRef(false);
+  const settings={...baseSettings,water:situationTarget(baseSettings,day)};
   const quicks = quickHistory(entries);
   if (!settings.onboarded) return <Redirect href="/onboarding" />;
   const today = onDay(entries, day),

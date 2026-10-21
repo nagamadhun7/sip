@@ -86,6 +86,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     state.settings.reminders,
     state.settings.reminderPreferences,
     state.settings.reminderHours,
+    state.settings.situation,
     state.settings.bedtime,
     state.settings.water,
   ]);
