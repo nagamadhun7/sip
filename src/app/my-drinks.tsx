@@ -1,3 +1,4 @@
+import { ShareRecipe } from "../components/share-recipe";
 import { alcoholAllowed, isAlcohol } from "../features/alcohol";
 import React, { useRef, useState } from "react";
 import { FlatList, View, Pressable, StyleSheet } from "react-native";
@@ -94,6 +95,7 @@ export default function MyDrinks() {
               </T>
             </Pressable>
           </View>
+          <ShareRecipe drink={item} />
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={`Edit ${item.name}`}
