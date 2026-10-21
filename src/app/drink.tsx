@@ -32,6 +32,7 @@ import { buildContext, toDrink, adjustRecipe } from "../drink-maker/core";
 export default function DrinkForm() {
   const params = useLocalSearchParams<{
     drink?: string;
+    estimated_ml?: string;
     entry?: string;
     custom?: string;
     name?: string;
@@ -68,7 +69,7 @@ export default function DrinkForm() {
     [ml, setMl] = useState(
       String(
         +(
-          (existing?.ml ?? initial.serving) /
+          (params.estimated_ml?Number(params.estimated_ml):(existing?.ml ?? initial.serving)) /
           (store.settings.units === "oz" ? regionalOunce(store.settings.locale??"en-US") : 1)
         ).toFixed(3),
       ),

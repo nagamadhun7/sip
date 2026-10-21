@@ -1,3 +1,4 @@
+import { handlePhoto, generatePhoto } from "./photo";
 import { accessStatus } from "./access";
 import { handleParse, generateParsing } from "./parsing";
 import type { Dependencies } from "./service";
@@ -111,6 +112,7 @@ export class MakerUser extends DurableObject<Env> {
         generate: (input) =>
           generateParsing(input, env.OPENAI_API_KEY, env.OPENAI_MODEL),
       });
+    if (new URL(request.url).pathname === "/photo-drinks") return handlePhoto(body,{...deps,recognize:(image,ids)=>generatePhoto(image,ids,env.OPENAI_API_KEY,env.OPENAI_MODEL)});
     if (new URL(request.url).pathname === "/access") return accessStatus(deps);
     return handleMaker(body, deps);
   }
@@ -120,18 +122,18 @@ export default {
     const url = new URL(request.url);
     if (url.pathname === "/health") return json({ ok: true });
     if (
-      !["/drink-maker", "/food-lookup", "/parse-drinks", "/access"].includes(
+      !["/drink-maker", "/food-lookup", "/parse-drinks", "/photo-drinks", "/access"].includes(
         url.pathname,
       ) ||
       request.method !== "POST"
     )
       return json({ message: "Not found." }, 404);
-    if (Number(request.headers.get("Content-Length") ?? 0) > 50000)
+    if (Number(request.headers.get("Content-Length") ?? 0) > (url.pathname==="/photo-drinks"?1600000:50000))
       return json({ message: "Request too large." }, 413);
     if (
       !env.SUPABASE_URL ||
       !env.SUPABASE_PUBLISHABLE_KEY ||
-      (["/drink-maker", "/parse-drinks"].includes(url.pathname) &&
+      (["/drink-maker", "/parse-drinks", "/photo-drinks"].includes(url.pathname) &&
         !env.OPENAI_API_KEY)
     )
       return json(
@@ -168,7 +170,7 @@ export default {
       );
     }
     const text = await request.text();
-    if (new TextEncoder().encode(text).length > 50000)
+    if (new TextEncoder().encode(text).length > (url.pathname==="/photo-drinks"?1600000:50000))
       return json({ message: "Request too large." }, 413);
     const headers = new Headers({
       "Content-Type": "application/json",

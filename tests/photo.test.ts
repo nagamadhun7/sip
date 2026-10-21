@@ -1,0 +1,2 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {validatePhoto} from '../src/features/photo.ts';
+test('photo results cannot supply nutrition or select an unknown drink',()=>{assert.equal(validatePhoto({kind:'drink',drink_id:'unknown',amount_ml:250},['water']).kind,'unknown');assert.equal(validatePhoto({kind:'food',drink_id:null,amount_ml:null},['water']).kind,'food');assert.throws(()=>validatePhoto({kind:'drink',drink_id:'water',amount_ml:250,sugar:0},['water']));});

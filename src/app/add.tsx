@@ -31,6 +31,7 @@ export default function Add() {
           </T>
           <LogInput />
           <CompareDrinks />
+          <Button secondary title="Photograph a drink" onPress={()=>router.push({pathname:"/scan",params:{recognize:"1"}})} />
           <Input
             label="Search drinks"
             value={query}
