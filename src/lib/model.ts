@@ -18,7 +18,8 @@ export type Drink = {
   barcode?: string;
   label_photo?: string;
   missingNutrition?: Nutrient[];
-  shape?: "glass" | "cup" | "bottle";
+  shape?: import("./drink-icons").IconShape;
+  iconType?: string;
   recipe?: Recipe & { catalog_version: number };
 };
 export type Entry = {

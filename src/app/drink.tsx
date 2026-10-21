@@ -1,3 +1,5 @@
+import { DrinkIcon } from "../components/drink-icon";
+import { DrinkAppearance } from "../components/drink-appearance";
 import React, { useState } from "react";
 import { View, Pressable, Alert, Platform, Image } from "react-native";
 import { router, useLocalSearchParams, Stack } from "expo-router";
@@ -46,6 +48,8 @@ export default function DrinkForm() {
         id: id(),
         name: params.name ?? "",
         color: colors.blue,
+        shape: "tall-glass",
+        iconType: "custom-drink",
         serving: 0,
         nutrition: {
           sugar: null,
@@ -164,6 +168,8 @@ export default function DrinkForm() {
     setBusy(true);
     setError("");
     try {
+      if (!/^#[0-9a-f]{6}$/i.test(initial.color))
+        throw Error("Enter a six-digit icon color, such as #6FAEE8.");
       const entry = draft();
       validateEntry(entry);
       if (onlyLibrary || !base || params.custom)
@@ -222,18 +228,28 @@ export default function DrinkForm() {
         }}
       />
       <View style={{ flexDirection: "row", gap: 12, alignItems: "center" }}>
-        <View
-          style={{
-            width: 18,
-            height: 18,
-            borderRadius: 9,
-            backgroundColor: initial.color,
-          }}
-        />
+        <DrinkIcon drink={initial} size={36} />
         <T size={28} bold>
           {name || "New drink"}
         </T>
       </View>
+      {!existing?.health ? (
+        <DrinkAppearance
+          shape={initial.shape ?? "tall-glass"}
+          color={initial.color}
+          onShape={(shape) =>
+            setInitial({ ...initial, shape, iconType: "custom-drink" })
+          }
+          onColor={(color) =>
+            setInitial({
+              ...initial,
+              color,
+              shape: initial.shape ?? "tall-glass",
+              iconType: "custom-drink",
+            })
+          }
+        />
+      ) : null}
       {initial.label_photo ? (
         <>
           <Image

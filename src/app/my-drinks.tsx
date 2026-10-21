@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
 import { FlatList, View, Pressable, StyleSheet } from "react-native";
 import { router } from "expo-router";
-import Svg, { Path } from "react-native-svg";
+import { DrinkIcon } from "../components/drink-icon";
 import { useStore } from "../state/store";
 import { T, Button, ErrorText } from "../components/ui";
 import { id, formatVolume } from "../lib/model";
@@ -73,20 +73,7 @@ export default function MyDrinks() {
           }}
         >
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-            <Svg width={22} height={28} viewBox="0 0 24 30">
-              <Path
-                d={
-                  item.shape === "bottle"
-                    ? "M9 2h6v6l4 5v14H5V13l4-5Z"
-                    : item.shape === "cup"
-                      ? "M3 5h14v20H3ZM17 9h4v10h-4"
-                      : "M3 3h18l-2 24H5Z"
-                }
-                fill={item.color}
-                stroke={item.color}
-                strokeWidth={1}
-              />
-            </Svg>
+            <DrinkIcon drink={item} size={36} />
             <View style={{ flex: 1, gap: 3 }}>
               <T bold>{item.name}</T>
               <T size={12} muted>

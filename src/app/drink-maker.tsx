@@ -1,3 +1,5 @@
+import { DrinkAppearance } from "../components/drink-appearance";
+import type { IconShape } from "../lib/drink-icons";
 import React, { useEffect, useRef, useState } from "react";
 import {
   View,
@@ -121,9 +123,7 @@ export default function DrinkMaker() {
     [paywall, setPaywall] = useState(false),
     [usage, setUsage] = useState(""),
     [color, setColor] = useState(saved?.color ?? "#6FAEE8"),
-    [shape, setShape] = useState<"glass" | "cup" | "bottle">(
-      saved?.shape ?? "glass",
-    );
+    [shape, setShape] = useState<IconShape>(saved?.shape ?? "glass");
   const generation = useRef<AbortController | null>(null),
     saveLock = useRef(false),
     variation = useRef(0);
@@ -253,6 +253,8 @@ export default function DrinkMaker() {
         throw Error(
           "This recipe conflicts with your current profile or filters. Edit it in Lab.",
         );
+      if (!/^#[0-9a-f]{6}$/i.test(color))
+        throw Error("Enter a six-digit icon color, such as #6FAEE8.");
       const drink = toDrink(selected, stableId, color, shape);
       if ((calculate(selected.ingredients).nutrition.caffeine ?? 0) > 200)
         throw Error(
@@ -638,48 +640,12 @@ export default function DrinkMaker() {
           ) : null}
         </>
       )}
-      <View style={{ gap: 12 }}>
-        <T size={12} muted>
-          Icon shape
-        </T>
-        <View style={{ flexDirection: "row", gap: 20 }}>
-          {(["glass", "cup", "bottle"] as const).map((s) => (
-            <Pressable
-              key={s}
-              accessibilityRole="radio"
-              accessibilityState={{ selected: s === shape }}
-              onPress={() => setShape(s)}
-            >
-              <T bold={s === shape}>
-                {s[0].toUpperCase() + s.slice(1)}
-                {s === shape ? " ✓" : ""}
-              </T>
-            </Pressable>
-          ))}
-        </View>
-        <T size={12} muted>
-          Color
-        </T>
-        <View style={{ flexDirection: "row", gap: 18 }}>
-          {["#6FAEE8", "#A0724A", "#D6B48C", "#90A783", "#F2A58A"].map((c) => (
-            <Pressable
-              key={c}
-              accessibilityRole="radio"
-              accessibilityLabel={`Color ${c}`}
-              accessibilityState={{ selected: c === color }}
-              onPress={() => setColor(c)}
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: 14,
-                backgroundColor: c,
-                borderWidth: c === color ? 3 : 0,
-                borderColor: "#1F2A33",
-              }}
-            />
-          ))}
-        </View>
-      </View>
+      <DrinkAppearance
+        shape={shape}
+        color={color}
+        onShape={setShape}
+        onColor={setColor}
+      />
       <ErrorText error={error} />
       {paywall ? (
         <Pressable onPress={() => router.push("/pro")}>

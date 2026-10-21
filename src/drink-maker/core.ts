@@ -463,7 +463,7 @@ export function toDrink(
   recipe: Recipe,
   id: string,
   color: string,
-  shape: "glass" | "cup" | "bottle",
+  shape: import("../lib/drink-icons").IconShape,
 ): Drink {
   const t = calculate(recipe.ingredients);
   if (t.volume_ml < 1 || t.volume_ml > 1000 || !recipe.name.trim())

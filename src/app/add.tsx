@@ -1,17 +1,18 @@
+import { DrinkIcon } from "../components/drink-icon";
 import React, { useState } from "react";
 import { View, FlatList } from "react-native";
 import { router } from "expo-router";
 import { useStore } from "../state/store";
 import { id, formatVolume } from "../lib/model";
 import { T, Input, Row, Button } from "../components/ui";
-import {catalogDrinks} from "../lib/tracking";
+import { catalogDrinks } from "../lib/tracking";
 import { LogInput } from "../components/log-input";
 export default function Add() {
   const { library, catalog, containers, saveEntry, settings } = useStore(),
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false),
     [query, setQuery] = useState("");
-  const list = catalogDrinks(library,catalog).filter((d) =>
+  const list = catalogDrinks(library, catalog).filter((d) =>
     d.name.toLowerCase().includes(query.toLowerCase()),
   );
   return (
@@ -66,6 +67,7 @@ export default function Add() {
             <Row
               key={c.id}
               title={c.name}
+              leading={<DrinkIcon type="my-bottle" size={28} />}
               detail={formatVolume(c.ml, settings.units)}
               onPress={
                 busy
@@ -108,7 +110,7 @@ export default function Add() {
           <Row
             title={item.name}
             detail={item.source}
-            dot={item.color}
+            leading={<DrinkIcon drink={item} size={30} />}
             onPress={
               busy
                 ? undefined

@@ -137,6 +137,7 @@ export function Row({
   value,
   onPress,
   dot,
+  leading,
   children,
 }: {
   title: string;
@@ -144,6 +145,7 @@ export function Row({
   value?: string;
   onPress?: () => void;
   dot?: string;
+  leading?: React.ReactNode;
   children?: React.ReactNode;
 }) {
   const content = (
@@ -158,6 +160,7 @@ export function Row({
         minHeight: 54,
       }}
     >
+      {leading}
       {dot ? (
         <View
           style={{

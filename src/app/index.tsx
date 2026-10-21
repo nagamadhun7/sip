@@ -1,3 +1,4 @@
+import { DrinkIcon } from "../components/drink-icon";
 import React, { useState, useRef } from "react";
 import { View, Pressable, ScrollView } from "react-native";
 import { Redirect, router } from "expo-router";
@@ -182,14 +183,7 @@ export default function Today() {
               <View
                 style={{ flexDirection: "row", gap: 6, alignItems: "center" }}
               >
-                <View
-                  style={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: 5,
-                    backgroundColor: previous.drink.color,
-                  }}
-                />
+                <DrinkIcon drink={previous.drink} size={28} />
                 <T>{previous.drink.name}</T>
               </View>
               <T size={13} muted>
