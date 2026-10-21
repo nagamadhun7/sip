@@ -1,3 +1,4 @@
+import { partitionInput } from "../../src/features/non-drink.ts";
 import {
   parseInputSchema,
   validateParsed,
@@ -15,6 +16,9 @@ export async function handleParse(value: unknown, deps: Deps) {
   if (!parsed.success)
     return json({ message: "Check your drink description." }, 400);
   const input = parsed.data;
+  const parts=partitionInput(input.text,input.catalog.map(d=>d.name));
+  if(!parts.drinks.length)return json({drinks:[],message:"No drinks found. Nothing was logged."},422);
+  input.text=parts.drinks.join(" and ");
   const safe = checkRequest(input.text);
   if (!safe.ok) return json({ message: safe.message }, 422);
   const now = deps.now(),
@@ -69,7 +73,7 @@ export async function handleParse(value: unknown, deps: Deps) {
       }
       return json({
         drinks,
-        message: "Review the matched drinks before logging.",
+        message: `Review the matched drinks before logging.${parts.skipped.length?` Skipped: ${parts.skipped.join("; ")}.`:""}`,
       });
     } catch {}
   }

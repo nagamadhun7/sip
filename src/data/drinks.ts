@@ -1,6 +1,8 @@
 import { Drink } from "../lib/model";
 // Generic estimates per 100 ml; labels and recipes override these values.
 export const drinks: Drink[] = [
+  {id:"broth",name:"Broth",color:"#B77643",iconType:"broth",serving:0,nutrition:{sugar:null,caffeine:null,calories:null,sodium:null,potassium:null},source:"Enter the label: broth nutrients vary"},
+  {id:"soup",name:"Soup",color:"#B77643",iconType:"broth",serving:0,nutrition:{sugar:null,caffeine:null,calories:null,sodium:null,potassium:null},source:"Enter the label: soup nutrients vary"},
   {
     id: "water",
     name: "Water",
