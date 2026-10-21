@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { View, Linking, ActivityIndicator } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useStore } from "../state/store";
 import { File, Paths } from "expo-file-system";
 import { callService } from "../drink-maker/client";
@@ -10,6 +10,7 @@ import { id } from "../lib/model";
 import { lookupBarcode } from "../lib/barcode";
 import { Page, T, Input, Button, ErrorText } from "../components/ui";
 export default function Scan() {
+  const params=useLocalSearchParams<{compare?:string}>();
   const [permission, requestPermission] = useCameraPermissions(),
     [code, setCode] = useState(""),
     [busy, setBusy] = useState(false),
@@ -55,7 +56,10 @@ export default function Scan() {
         return;
       }
       await store.saveDrink(drink);
-      router.replace({ pathname: "/drink", params: { drink: drink.id } });
+      if(params.compare==='0'||params.compare==='1'){
+        const ids=[...(store.settings.comparison??['',''])] as [string,string];ids[Number(params.compare)]=drink.id;
+        await store.saveSettings({...store.settings,comparison:ids});router.back();
+      }else router.replace({ pathname: "/drink", params: { drink: drink.id } });
     } catch (e) {
       setNotFound(true);
       if (!controller.current?.signal.aborted)

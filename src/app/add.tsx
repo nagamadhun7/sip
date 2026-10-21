@@ -1,3 +1,4 @@
+import { CompareDrinks } from "../components/compare-drinks";
 import { DrinkIcon } from "../components/drink-icon";
 import React, { useState } from "react";
 import { View, FlatList } from "react-native";
@@ -28,6 +29,7 @@ export default function Add() {
             What did you drink?
           </T>
           <LogInput />
+          <CompareDrinks />
           <Input
             label="Search drinks"
             value={query}
