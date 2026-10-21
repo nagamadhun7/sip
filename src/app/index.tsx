@@ -172,7 +172,7 @@ export default function Today() {
             />
           </Pressable>
         )}
-        <View style={{ flexDirection: "row", gap: 12 }}>
+        <View style={{ flexDirection: fontScale>1.3?"column":"row", gap: 12 }}>
           {quicks.map((previous, idx) => (
             <Pressable
               key={idx}
