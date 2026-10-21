@@ -117,3 +117,5 @@ export default function MyDrinks() {
     />
   );
 }
+
+export { ErrorBoundary } from "../components/route-error";

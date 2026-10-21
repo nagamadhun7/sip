@@ -333,3 +333,5 @@ function ReminderField({
     </>
   );
 }
+
+export { ErrorBoundary } from "../components/route-error";

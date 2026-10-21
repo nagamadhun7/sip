@@ -75,3 +75,5 @@ export default function Balance() {
     </Page>
   );
 }
+
+export { ErrorBoundary } from "../components/route-error";

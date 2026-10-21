@@ -239,3 +239,5 @@ export default function Scan() {
     </Page>
   );
 }
+
+export { ErrorBoundary } from "../components/route-error";

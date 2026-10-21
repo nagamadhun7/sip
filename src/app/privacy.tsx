@@ -132,3 +132,5 @@ export default function Privacy() {
     </Page>
   );
 }
+
+export { ErrorBoundary } from "../components/route-error";

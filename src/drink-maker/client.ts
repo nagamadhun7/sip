@@ -1,3 +1,4 @@
+import { connectionMessage } from "../features/errors";
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
 import Constants, { ExecutionEnvironment } from "expo-constants";
@@ -17,7 +18,7 @@ async function fetchJSON(url: string, init: RequestInit) {
   const response = await fetch(url, {
     ...init,
     signal: AbortSignal.timeout(45000),
-  });
+  }).catch(e=>{throw new MakerError(connectionMessage(e),"OFFLINE");});
   const data = await response
     .json()
     .catch(() => ({ message: "The server returned an unreadable response." }));
@@ -181,8 +182,8 @@ export async function callService<T>(
       "Content-Type": "application/json",
     },
     body: JSON.stringify(body),
-  });
-  const result = await r.json();
+  }).catch(e=>{throw new MakerError(connectionMessage(e),"OFFLINE");});
+  const result = await r.json().catch(()=>({message:"The service returned an unreadable response. Retry."}));
   if (!r.ok)
     throw new MakerError(
       result.message ?? "The request failed. Retry.",

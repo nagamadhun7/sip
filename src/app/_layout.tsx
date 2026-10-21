@@ -1,3 +1,4 @@
+import { ServiceNotice } from "../components/service-notice";
 import { AccessiblePressable as Pressable } from "../components/accessible-pressable";
 import { NotificationActions } from "../components/notification-actions";
 import React from "react";
@@ -33,6 +34,7 @@ export default function Layout() {
       <StoreProvider>
         <StatusBar style="dark" />
         <NotificationActions />
+        <ServiceNotice />
         <Stack
           screenOptions={{
             contentStyle: { backgroundColor: "white" },
@@ -89,3 +91,5 @@ export default function Layout() {
     </SafeAreaProvider>
   );
 }
+
+export { ErrorBoundary } from "../components/route-error";

@@ -86,3 +86,5 @@ export default function MakerProfile() {
     </Page>
   );
 }
+
+export { ErrorBoundary } from "../components/route-error";

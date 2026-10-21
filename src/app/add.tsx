@@ -162,3 +162,5 @@ export default function Add() {
     />
   );
 }
+
+export { ErrorBoundary } from "../components/route-error";

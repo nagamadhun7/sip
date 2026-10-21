@@ -97,3 +97,5 @@ export default function Caffeine() {
     </Page>
   );
 }
+
+export { ErrorBoundary } from "../components/route-error";

@@ -37,6 +37,7 @@ type Store = State & {
   saveContainer: (c: import("../lib/tracking").Container) => Promise<void>;
   undo: () => Promise<void>;
   serviceError: string;
+  reload: () => Promise<void>;
   connectHealth: () => Promise<void>;
   syncHealth: () => Promise<void>;
 };
@@ -57,6 +58,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const loaded = await storage.load();
       setLocale(loaded.settings.locale??"en-US");
       setState(loaded);
+      setError("");
       setReady(true);
     } catch {
       setError(
@@ -123,6 +125,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const value: Store = {
     ...state,
     serviceError: error,
+    reload: hydrate,
     saveEntries: async (entries) => {
       requireAlcoholAccess(entries,state.settings);
       await storage.putEntries(entries);

@@ -215,3 +215,5 @@ export default function Pro() {
     </Page>
   );
 }
+
+export { ErrorBoundary } from "../components/route-error";

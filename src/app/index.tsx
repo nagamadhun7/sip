@@ -307,3 +307,5 @@ export default function Today() {
     </View>
   );
 }
+
+export { ErrorBoundary } from "../components/route-error";

@@ -65,3 +65,5 @@ export default function Targets() {
     </Page>
   );
 }
+
+export { ErrorBoundary } from "../components/route-error";

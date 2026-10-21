@@ -249,3 +249,5 @@ export default function Onboarding() {
     </View>
   );
 }
+
+export { ErrorBoundary } from "../components/route-error";

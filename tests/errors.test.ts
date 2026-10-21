@@ -1,0 +1,2 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {connectionMessage} from '../src/features/errors.ts';
+test('connection and timeout failures offer a retry and preserve offline choices',()=>{assert.match(connectionMessage(new TypeError('Network request failed')),/saved drinks work offline/);const e=new Error();e.name='TimeoutError';assert.match(connectionMessage(e),/timed out/);});

@@ -657,3 +657,5 @@ export default function DrinkMaker() {
     </Page>
   );
 }
+
+export { ErrorBoundary } from "../components/route-error";

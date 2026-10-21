@@ -189,3 +189,5 @@ export default function Week() {
     </View>
   );
 }
+
+export { ErrorBoundary } from "../components/route-error";

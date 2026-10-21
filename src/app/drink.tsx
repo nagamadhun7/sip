@@ -214,6 +214,7 @@ export default function DrinkForm() {
       setBusy(false);
     }
   }
+  if(params.drink&&!base)return <Page><T>This saved drink is unavailable. Choose another drink or enter it manually.</T><Button title="Choose a drink" onPress={()=>router.replace('/add')}/></Page>;
   return (
     <Page
       footer={
@@ -445,3 +446,5 @@ export default function DrinkForm() {
     </Page>
   );
 }
+
+export { ErrorBoundary } from "../components/route-error";
