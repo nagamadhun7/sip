@@ -90,16 +90,27 @@ export default function Privacy() {
         Permissions, Health and backups
       </T>
       <T>
-        Camera permission scans barcodes and photographs labels. Label photos
-        stay in app storage. Optional Health sync writes known drink nutrients
-        and fluid intake to Apple Health or Health Connect, and imports
-        hydration records into SQLite. Sync does not send Health data to the
-        recipe server. You can disconnect in Settings and manage permissions in
-        Health. Deleting a synced entry propagates to samples Sip wrote; records
-        from other apps are not deleted. Notifications are optional. Your
-        operating system may include app data in device backups according to
-        your backup settings. Exported files go only to the destination you
-        choose in the share sheet.
+        Camera permission scans barcodes and photographs drinks or labels.
+        Requested drink recognition sends the image to the recipe server and
+        OpenAI; images are not retained in the server cache. Recognition
+        estimates the drink and size, never nutrition. Label photos stay in app
+        storage. Optional Health sync writes known drink nutrients and fluid
+        intake to Apple Health or Health Connect, and imports hydration records
+        into SQLite. Sync does not send Health data to the recipe server. You
+        can disconnect in Settings and manage permissions in Health. Deleting a
+        synced entry propagates to samples Sip wrote; records from other apps
+        are not deleted. Notifications are optional. Your operating system may
+        include app data in device backups according to your backup settings.
+        Exported files go only to the destination you choose in the share sheet.
+      </T>
+      <T size={20} bold>
+        Crash reporting
+      </T>
+      <T>
+        When configured, Sentry receives app version, error types and stack
+        traces to diagnose crashes. We remove user identity, request bodies,
+        breadcrumbs, notes, photos and Health/profile context. No advertising,
+        session replay or performance profiling is enabled.
       </T>
       <T size={20} bold>
         Delete your data

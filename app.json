@@ -2,7 +2,7 @@
   "expo": {
     "name": "Sip",
     "slug": "sip",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -11,7 +11,10 @@
       "bundleIdentifier": "com.sip.tracker",
       "buildNumber": "1",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "Allow Sip to scan drink barcodes and photograph drinks or labels. Drink photos are sent for recognition only when you request an estimate.",
+        "NSMicrophoneUsageDescription": "Allow Sip to hear drink descriptions for voice logging.",
+        "NSSpeechRecognitionUsageDescription": "Allow Sip to turn spoken drink descriptions into text using your device speech service."
       }
     },
     "android": {
@@ -45,11 +48,18 @@
       "expo-router",
       "expo-sqlite",
       "expo-sharing",
-      "expo-splash-screen",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/icon.png",
+          "imageWidth": 180,
+          "backgroundColor": "#FFFFFF"
+        }
+      ],
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow Sip to scan drink barcodes. Camera images stay on your device.",
+          "cameraPermission": "Allow Sip to scan drink barcodes and photograph drinks or labels. Drink photos are sent for recognition only when you request an estimate.",
           "recordAudioAndroid": false,
           "barcodeScannerEnabled": true
         }
@@ -57,7 +67,13 @@
       "expo-notifications",
       "expo-secure-store",
       "./plugins/with-purchase-launch-mode",
-      "expo-speech-recognition",
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Allow Sip to hear your drink description.",
+          "speechRecognitionPermission": "Allow Sip to transcribe your drink description using your device speech service."
+        }
+      ],
       [
         "@kingstinct/react-native-healthkit",
         {
@@ -75,7 +91,8 @@
             "minSdkVersion": 26
           }
         }
-      ]
+      ],
+      "@sentry/react-native"
     ],
     "scheme": "sip",
     "extra": {

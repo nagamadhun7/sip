@@ -1,8 +1,8 @@
+import "../lib/crashes";
 import { ServiceNotice } from "../components/service-notice";
 import { AccessiblePressable as Pressable } from "../components/accessible-pressable";
 import { NotificationActions } from "../components/notification-actions";
 import React from "react";
-import { } from "react-native";
 import { router } from "expo-router";
 import { T } from "../components/ui";
 import { Stack } from "expo-router/stack";

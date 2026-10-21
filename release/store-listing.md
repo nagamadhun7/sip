@@ -1,50 +1,30 @@
-# Sip — listing draft (update after Drink maker services are configured)
+# Store listing draft — Sip 1.1.0
 
 App name: Sip: Drink & Water Tracker
-Subtitle: Know what you drink
+Subtitle: Water, caffeine and sugar
 Category: Health & Fitness
-Android package / iOS bundle identifier currently configured: com.sip.tracker
+Bundle/package: com.sip.tracker (publisher must confirm ownership)
 
-## Short description
-Track water, caffeine and sugar. Simple drink logging, personal targets and history.
+## Google Play short description
+Track drinks, water, caffeine and sugar with personal goals and saved recipes.
 
 ## Description
-Know what you drink with Sip. Log water, coffee, tea, soda and your own drinks in a clean, simple tracker.
+Know what you drink. Sip keeps your daily drink history on your device and helps you track water, caffeine, sugar, calories and sodium.
 
-• Add everyday drinks in one tap.
-• Scan a beverage barcode to look up its label nutrition in Open Food Facts.
-• Save custom drinks with nutrition from your own labels.
-• Build ingredient recipes in the free offline Drink maker Lab.
-• Optionally generate recipes in Goal mode with a limited free allowance or Pro.
-• Edit amounts and times; your daily totals update automatically.
-• Set personal fluid, caffeine, total sugar and mineral targets.
-• View daily balance and seven-day history.
-• Estimate caffeine remaining using a five-hour half-life.
-• Choose optional daily reminders.
-• Export your history as a CSV file.
+Log familiar drinks in one tap, write several drinks in a note, or scan a beverage barcode. Review portions and see where nutrient estimates come from before saving. Save custom drinks and containers, compare two drinks against today's remaining limits, and build ingredient recipes in the offline Drink maker Lab.
 
-No account or subscription is required. Drink history stays on your device. Barcode lookup uses an internet connection; logging and history work offline. Unknown nutrients are flagged rather than counted as zero.
+Set personal targets and a home-screen focus. View your daily balance and week history, estimate remaining caffeine with a five-hour half-life, and use a gradual caffeine cut-back plan based on your recorded history. Situation modes apply the extra water and reminder schedule you choose; fasting reminders fit your eating window. Optional adult alcohol tracking uses entered ABV, your own limit and confirmed drink-free days, without blood alcohol estimates.
 
-Nutrition estimates and caffeine calculations are informational, not medical advice. Product information may be incomplete. Verify values against your label and follow personal advice from your healthcare professional.
+Choose local reminders with quiet hours, a daily cap and Snooze/Log actions. Optional Apple Health or Health Connect integration imports hydration and exports your logged fluid and known nutrients. Export CSV history or share a PNG recipe card.
+
+Core tracking, cached drinks and Lab work offline. Requested online features include Open Food Facts/USDA lookup, complex text matching, estimated photo recognition and Goal recipes. AI nutrition is never accepted: values come from ingredient and label data. Missing values remain not listed. Online AI uses are limited; Pro and restoration use the platform store.
+
+English, Spanish and French core labels, local drink aliases and speech locales are available. Some explanatory text falls back to English. Nutrition, photo size, caffeine and situation estimates are informational tracking tools, not medical recommendations. Verify labels and use your own limits.
 
 ## Review notes
-No login required. Complete the short onboarding flow, then tap Water to log a drink or + to browse drinks and create one. Settings includes targets, focus, units, reminders, CSV export and data deletion. Camera permission is requested only on the barcode screen. If a camera is unavailable, enter barcode 5449000000996 to test beverage lookup. Product lookup depends on the external Open Food Facts service. Core logging is offline and requires no service account.
+Use local onboarding and Add a drink for the free core flow. Add → Compare two drinks compares portions without logging. Settings contains language/region, situation preferences, caffeine cut-back and adult alcohol opt-in. My drinks provides recipe-card sharing. Photo recognition opens a camera and a confirm/edit flow; no photo is silently logged. Barcode manual entry works without camera access.
 
-Drink maker Lab is offline. Goal and Pro require configured services and store products before review; do not submit an unconfigured Goal/paywall flow. No microphone capture or Health integration is included. See drink-maker.md for setup and physical-device verification.
+Before submission, configure and test the actual backend, USDA/OpenAI services, subscriptions, microphone permissions, Health authorization, photo camera capture and Sentry in physical signed iOS/Android builds. Do not submit unconfigured advertised flows or claim integration tests passed. Verify accessibility at large text sizes and VoiceOver/TalkBack.
 
-## Publisher details still required
-- Confirm publisher name and ownership/availability of the configured bundle/package ID.
-- Public support email and support URL.
-- Hosted public privacy policy URL; the in-app policy text is in src/app/privacy.tsx.
-- Apple Developer membership and App Store Connect app record/team.
-- Google Play developer account/app record and submission credentials.
-- Content/age ratings, privacy disclosures and required testing must be completed for the publisher's accounts.
-
-## Privacy disclosure facts for publisher review
-- Drink records, nutrition, goals and preferences are stored locally in SQLite.
-- Camera frames are used for barcode detection on device and are not uploaded.
-- The barcode string and normal connection metadata are sent to Open Food Facts for lookup.
-- Goal creates a Supabase anonymous session, sends the entered request and selected profile context to the server/OpenAI, and stores recipes/hashed cache keys and usage counters server-side. Pro uses RevenueCat and the platform store. Review related health, user ID, purchase and diagnostics disclosures with the actual configured providers.
-- No advertising or remote push token registration is used.
-- Device backups may include local app data. CSV files are shared only through the user's chosen share-sheet destination.
-- Review the current store questionnaires and Open Food Facts policy before submitting declarations; do not assume the third-party lookup is equivalent to entirely offline use.
+## Publisher inputs still needed
+Legal/publisher name; support email and URL; hosted privacy URL; public remote-deletion request URL/contact and operational procedure; Apple/Google membership and signing; app/store records; RevenueCat products and keys; backend credentials/deployment; Sentry DSN/project and source-map upload token. No prices or Pro benefits should be published until products are configured.
