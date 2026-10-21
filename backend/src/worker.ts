@@ -1,3 +1,4 @@
+import { accessStatus } from "./access";
 import { handleParse, generateParsing } from "./parsing";
 import type { Dependencies } from "./service";
 import { DurableObject } from "cloudflare:workers";
@@ -110,6 +111,7 @@ export class MakerUser extends DurableObject<Env> {
         generate: (input) =>
           generateParsing(input, env.OPENAI_API_KEY, env.OPENAI_MODEL),
       });
+    if (new URL(request.url).pathname === "/access") return accessStatus(deps);
     return handleMaker(body, deps);
   }
 }
@@ -118,7 +120,7 @@ export default {
     const url = new URL(request.url);
     if (url.pathname === "/health") return json({ ok: true });
     if (
-      !["/drink-maker", "/food-lookup", "/parse-drinks"].includes(
+      !["/drink-maker", "/food-lookup", "/parse-drinks", "/access"].includes(
         url.pathname,
       ) ||
       request.method !== "POST"
@@ -129,7 +131,8 @@ export default {
     if (
       !env.SUPABASE_URL ||
       !env.SUPABASE_PUBLISHABLE_KEY ||
-      (url.pathname !== "/food-lookup" && !env.OPENAI_API_KEY)
+      (["/drink-maker", "/parse-drinks"].includes(url.pathname) &&
+        !env.OPENAI_API_KEY)
     )
       return json(
         {

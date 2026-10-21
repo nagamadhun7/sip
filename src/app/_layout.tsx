@@ -1,3 +1,4 @@
+import { NotificationActions } from "../components/notification-actions";
 import React from "react";
 import { Pressable } from "react-native";
 import { router } from "expo-router";
@@ -30,6 +31,7 @@ export default function Layout() {
     <SafeAreaProvider>
       <StoreProvider>
         <StatusBar style="dark" />
+        <NotificationActions />
         <Stack
           screenOptions={{
             contentStyle: { backgroundColor: "white" },

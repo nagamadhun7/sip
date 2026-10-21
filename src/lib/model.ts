@@ -21,8 +21,27 @@ export type Drink = {
   shape?: "glass" | "cup" | "bottle";
   recipe?: Recipe & { catalog_version: number };
 };
-export type Entry = { id: string; drink: Drink; ml: number; at: string };
+export type Entry = {
+  id: string;
+  drink: Drink;
+  ml: number;
+  at: string;
+  health?: { platform: "ios" | "android"; id: string };
+};
 export type Settings = {
+  reminderPreferences?: import("./reminder-plan").ReminderPreferences;
+  aiAccess?: {
+    pro: boolean;
+    daily_used: number;
+    daily_limit: number;
+    monthly_used: number;
+    monthly_limit: number | null;
+    fetched_at: string;
+  };
+  healthSync?: boolean;
+  reminderLastError?: string;
+  healthLastSync?: string;
+  healthLastError?: string;
   profile?: import("./tracking").UserProfile;
   onboarded: boolean;
   makerProfile?: Profile;

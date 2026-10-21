@@ -4,13 +4,14 @@ import { router } from "expo-router";
 import { useStore } from "../state/store";
 import { id, formatVolume } from "../lib/model";
 import { T, Input, Row, Button } from "../components/ui";
+import {catalogDrinks} from "../lib/tracking";
 import { LogInput } from "../components/log-input";
 export default function Add() {
   const { library, catalog, containers, saveEntry, settings } = useStore(),
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false),
     [query, setQuery] = useState("");
-  const list = [...library, ...catalog].filter((d) =>
+  const list = catalogDrinks(library,catalog).filter((d) =>
     d.name.toLowerCase().includes(query.toLowerCase()),
   );
   return (

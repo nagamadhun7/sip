@@ -24,6 +24,7 @@ export default function Scan() {
     store = useStore();
   useEffect(() => () => controller.current?.abort(), []);
   async function lookup(value = code) {
+    value=value.replace(/\s/g,'');
     if (lock.current) return;
     lock.current = true;
     setBusy(true);

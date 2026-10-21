@@ -105,6 +105,7 @@ export function repeatDay(
 ): Entry[] {
   return onDay(entries, from).map((e) => ({
     ...structuredClone(e),
+    health: undefined,
     at: now.toISOString(),
   }));
 }
@@ -147,4 +148,13 @@ export function makeEntry(
   now = new Date(),
 ): Omit<Entry, "id"> {
   return { drink: structuredClone(drink), ml, at: now.toISOString() };
+}
+
+export function catalogDrinks(library: Drink[], catalog: Drink[]) {
+  const seen = new Set<string>();
+  return [...library, ...catalog].filter((d) => {
+    if (seen.has(d.id)) return false;
+    seen.add(d.id);
+    return true;
+  });
 }

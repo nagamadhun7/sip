@@ -1,7 +1,27 @@
-import React, { createContext, use, useEffect, useState } from "react";
-import { ActivityIndicator, Text, View, Pressable } from "react-native";
+import React, {
+  createContext,
+  use,
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
+import {
+  ActivityIndicator,
+  Text,
+  View,
+  Pressable,
+  AppState,
+} from "react-native";
 import { Drink, Entry, Settings, defaults } from "../lib/model";
 import * as storage from "../lib/database";
+import { setReminders } from "../lib/reminders";
+import * as Notifications from "expo-notifications";
+import {
+  syncHealth,
+  authorizeHealth,
+  setHealthEnabled,
+  stopHealth,
+} from "../health/service";
 type State = Awaited<ReturnType<typeof storage.load>>;
 type Store = State & {
   saveEntry: (e: Entry) => Promise<void>;
@@ -12,6 +32,9 @@ type Store = State & {
   erase: () => Promise<void>;
   saveContainer: (c: import("../lib/tracking").Container) => Promise<void>;
   undo: () => Promise<void>;
+  serviceError: string;
+  connectHealth: () => Promise<void>;
+  syncHealth: () => Promise<void>;
 };
 const Context = createContext<Store | null>(null);
 export function StoreProvider({ children }: { children: React.ReactNode }) {
@@ -25,7 +48,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }),
     [ready, setReady] = useState(false),
     [error, setError] = useState("");
-  const hydrate = async () => {
+  const hydrate = useCallback(async () => {
     try {
       const loaded = await storage.load();
       setState(loaded);
@@ -35,7 +58,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         "Could not open your drink database. Your records have not been changed.",
       );
     }
-  };
+  }, []);
   useEffect(() => {
     let active = true;
     void storage.load().then(
@@ -56,8 +79,43 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       active = false;
     };
   }, []);
+  const entriesKey = JSON.stringify(state.entries);
+  const reminderKey = JSON.stringify([
+    state.entries,
+    state.settings.reminders,
+    state.settings.reminderPreferences,
+    state.settings.reminderHours,
+    state.settings.bedtime,
+    state.settings.water,
+  ]);
+  useEffect(() => {
+    if (!ready) return;
+    void storage
+      .load()
+      .then((latest) => setReminders(latest.settings, latest.entries, false))
+      .catch((e) => setError((e as Error).message));
+  }, [ready, reminderKey]);
+  useEffect(() => {
+    if (!ready || !state.settings.healthSync) return;
+    void syncHealth().then(hydrate, () => hydrate());
+  }, [ready, entriesKey, state.settings.healthSync, hydrate]);
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (status) => {
+      if (status === "active") {
+        void syncHealth().then(hydrate, hydrate);
+        void storage
+          .load()
+          .then((latest) =>
+            setReminders(latest.settings, latest.entries, false),
+          )
+          .catch((e) => setError((e as Error).message));
+      }
+    });
+    return () => sub.remove();
+  }, [hydrate]);
   const value: Store = {
     ...state,
+    serviceError: error,
     saveEntries: async (entries) => {
       await storage.putEntries(entries);
       await hydrate();
@@ -75,8 +133,26 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       await hydrate();
     },
     saveSettings: async (settings) => {
+      if (settings.healthSync === false) setHealthEnabled(false);
       await storage.putSettings(settings);
       await hydrate();
+    },
+    connectHealth: async () => {
+      await authorizeHealth();
+      const latest = await storage.load();
+      await storage.putSettings({ ...latest.settings, healthSync: true });
+      try {
+        await syncHealth();
+      } finally {
+        await hydrate();
+      }
+    },
+    syncHealth: async () => {
+      try {
+        await syncHealth();
+      } finally {
+        await hydrate();
+      }
     },
     saveContainer: async (c) => {
       await storage.putContainer(c);
@@ -87,6 +163,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       await hydrate();
     },
     erase: async () => {
+      await stopHealth();
+      await setReminders({ ...state.settings, reminders: false }, [], false);
+      Notifications.clearLastNotificationResponse();
       await storage.erase();
       await hydrate();
     },

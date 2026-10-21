@@ -25,7 +25,10 @@
       "package": "com.sip.tracker",
       "versionCode": 1,
       "permissions": [
-        "android.permission.CAMERA"
+        "android.permission.CAMERA",
+        "android.permission.health.READ_HYDRATION",
+        "android.permission.health.WRITE_HYDRATION",
+        "android.permission.health.WRITE_NUTRITION"
       ],
       "blockedPermissions": [
         "android.permission.SYSTEM_ALERT_WINDOW",
@@ -54,7 +57,25 @@
       "expo-notifications",
       "expo-secure-store",
       "./plugins/with-purchase-launch-mode",
-      "expo-speech-recognition"
+      "expo-speech-recognition",
+      [
+        "@kingstinct/react-native-healthkit",
+        {
+          "NSHealthShareUsageDescription": "Allow Sip to import your hydration records.",
+          "NSHealthUpdateUsageDescription": "Allow Sip to save logged fluid intake and known drink nutrients.",
+          "background": false
+        }
+      ],
+      "react-native-health-connect",
+      "./plugins/with-health-rationale",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 26
+          }
+        }
+      ]
     ],
     "scheme": "sip",
     "extra": {

@@ -8,8 +8,9 @@ export function parseProduct(barcode: string, product: any): Drink {
     product.product_quantity_unit ?? "",
   ).toLowerCase();
   if (
-    !categories.includes("beverage") &&
-    !["ml", "l", "cl"].includes(quantityUnit)
+    /sauces|dressings|soups|spreads|breads/.test(categories) ||
+    (!categories.includes("beverage") &&
+      !["ml", "l", "cl"].includes(quantityUnit))
   )
     throw Error(
       "This product is not identified as a drink. Enter the drink label manually.",
@@ -83,11 +84,10 @@ export async function lookupBarcode(
     if (response.status !== 1) return fallback ? fallback(barcode) : null;
     return parseProduct(barcode, response.product);
   } catch (e) {
-    if (abort.signal.aborted)
-      throw Error(
-        "Lookup timed out or was cancelled. Check your connection and try again.",
-      );
+    if (signal?.aborted) throw Error("Lookup cancelled.");
     if (fallback) return fallback(barcode);
+    if (abort.signal.aborted)
+      throw Error("Lookup timed out. Check your connection and try again.");
     throw e;
   } finally {
     clearTimeout(timeout);

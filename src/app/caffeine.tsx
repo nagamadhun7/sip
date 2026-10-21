@@ -53,8 +53,12 @@ export default function Caffeine() {
       <T muted>Below 25 mg {hours ? "by" : "now"}</T>
       {hours ? (
         <T size={32} bold>
-          {clear.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
-          {localDay(clear) !== localDay() ? " tomorrow" : ""}
+          {clear.toLocaleString([], {
+            month: "short",
+            day: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+          })}
         </T>
       ) : null}
       <Row

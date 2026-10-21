@@ -95,6 +95,7 @@ export default function DrinkForm() {
     s.trim() === "" ? null : Number(s.replace(",", "."));
   const draft = (): Entry => ({
     id: existing?.id ?? id(),
+    health: existing?.health,
     ml: amount,
     at: at.toISOString(),
     drink: {

@@ -215,7 +215,7 @@ export default function DrinkMaker() {
           ? "Saved suggestion · no AI use charged"
           : response.usage.pro
             ? "Pro · daily limits apply"
-            : `${Math.max(0, (response.usage.monthly_limit ?? 3) - response.usage.monthly)} free AI uses left this month`,
+            : `${Math.max(0, (response.usage.monthly_limit ?? response.usage.monthly) - response.usage.monthly)} free AI uses left this month`,
       );
     } catch (e) {
       if (!controller.signal.aborted) {

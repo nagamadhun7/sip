@@ -1,3 +1,4 @@
+import {catalogDrinks} from "../lib/tracking";
 import React, { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import { router } from "expo-router";
@@ -26,7 +27,7 @@ export function LogInput() {
   const cleanup = useRef<null | (() => void)>(null),
     lock = useRef(false),
     controller = useRef<AbortController | null>(null);
-  const catalog = [...store.library, ...store.catalog];
+  const catalog = catalogDrinks(store.library,store.catalog);
   useEffect(
     () => () => {
       cleanup.current?.();

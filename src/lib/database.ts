@@ -1,3 +1,4 @@
+import { defaultReminderPreferences } from "./reminder-plan";
 import * as SQLite from "expo-sqlite";
 import { Drink, Entry, Settings, defaults, validateEntry } from "./model";
 import { drinks as seeds } from "../data/drinks";
@@ -14,6 +15,10 @@ CREATE INDEX IF NOT EXISTS records_at ON records(at);
 CREATE TABLE IF NOT EXISTS library(id TEXT PRIMARY KEY NOT NULL,payload TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS preferences(id INTEGER PRIMARY KEY CHECK(id=1),payload TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS catalog(id TEXT PRIMARY KEY NOT NULL,payload TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS notification_ledger(id TEXT PRIMARY KEY NOT NULL,at INTEGER NOT NULL,payload TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS action_receipts(id TEXT PRIMARY KEY NOT NULL);
+CREATE TABLE IF NOT EXISTS health_links(id TEXT PRIMARY KEY NOT NULL,payload TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS health_pending(id TEXT PRIMARY KEY NOT NULL);
 CREATE TABLE IF NOT EXISTS ingredients(id TEXT PRIMARY KEY NOT NULL,payload TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS containers(id TEXT PRIMARY KEY NOT NULL,payload TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS undo_change(id INTEGER PRIMARY KEY CHECK(id=1),payload TEXT NOT NULL);
@@ -34,7 +39,10 @@ PRAGMA user_version=2;`);
         );
       await tx.runAsync(
         "INSERT OR IGNORE INTO preferences(id,payload) VALUES(1,?)",
-        JSON.stringify(defaults),
+        JSON.stringify({
+          ...defaults,
+          reminderPreferences: defaultReminderPreferences,
+        }),
       );
     });
     return d;
@@ -74,9 +82,15 @@ export async function load() {
   );
   const settings = {
     ...defaults,
+    reminderPreferences: defaultReminderPreferences,
     ...(pref ? JSON.parse(pref.payload) : {}),
     ...(profile ? { profile: JSON.parse(profile.payload) } : {}),
   } as Settings;
+  if (!pref || !JSON.parse(pref.payload).reminderPreferences)
+    await d.runAsync(
+      "INSERT OR REPLACE INTO preferences(id,payload) VALUES(1,?)",
+      JSON.stringify(settings),
+    );
   return {
     entries: rows.map((r) => JSON.parse(r.payload) as Entry),
     library: library.map((r) => JSON.parse(r.payload) as Drink),
@@ -189,11 +203,97 @@ export async function erase() {
       "containers",
       "profile",
       "undo_change",
+      "notification_ledger",
+      "action_receipts",
+      "health_links",
+      "health_pending",
     ])
       await tx.runAsync(`DELETE FROM ${table}`);
     await tx.runAsync(
       "INSERT INTO preferences(id,payload) VALUES(1,?)",
-      JSON.stringify(defaults),
+      JSON.stringify({
+        ...defaults,
+        reminderPreferences: defaultReminderPreferences,
+      }),
     );
   });
+}
+
+export async function notificationLedger() {
+  return (await db()).getAllAsync<{ id: string; at: number; payload: string }>(
+    "SELECT * FROM notification_ledger",
+  );
+}
+export async function rememberNotifications(
+  items: import("./reminder-plan").Reminder[],
+) {
+  const d = await db();
+  await d.withExclusiveTransactionAsync(async (tx) => {
+    await tx.runAsync("DELETE FROM notification_ledger WHERE at>?", Date.now());
+    for (const r of items)
+      await tx.runAsync(
+        "INSERT OR REPLACE INTO notification_ledger(id,at,payload) VALUES(?,?,?)",
+        r.id,
+        r.at,
+        JSON.stringify(r),
+      );
+    await tx.runAsync(
+      "DELETE FROM notification_ledger WHERE at<?",
+      Date.now() - 7 * 86400000,
+    );
+  });
+}
+export async function actionHandled(key: string) {
+  return !!(await (
+    await db()
+  ).getFirstAsync("SELECT id FROM action_receipts WHERE id=?", key));
+}
+export async function markActionHandled(key: string) {
+  await (
+    await db()
+  ).runAsync("INSERT OR IGNORE INTO action_receipts(id) VALUES(?)", key);
+}
+export async function healthLinks() {
+  const rows = await (
+    await db()
+  ).getAllAsync<{ id: string; payload: string }>(
+    "SELECT id,payload FROM health_links",
+  );
+  return new Map(
+    rows.map((r) => [
+      r.id,
+      JSON.parse(r.payload) as {
+        signature: string;
+        ids: string[];
+        origin: string;
+      },
+    ]),
+  );
+}
+export async function saveHealthLink(
+  id: string,
+  value: { signature: string; ids: string[]; origin: string },
+) {
+  await (
+    await db()
+  ).runAsync(
+    "INSERT OR REPLACE INTO health_links(id,payload) VALUES(?,?)",
+    id,
+    JSON.stringify(value),
+  );
+}
+export async function removeHealthLink(id: string) {
+  await (await db()).runAsync("DELETE FROM health_links WHERE id=?", id);
+}
+
+export async function importHealthEntry(e: Entry) {
+  validateEntry(e);
+  await (
+    await db()
+  ).runAsync(
+    "INSERT OR REPLACE INTO records(id,at,payload) VALUES(?,?,?)",
+    e.id,
+    e.at,
+    JSON.stringify(e),
+  );
 }

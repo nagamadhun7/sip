@@ -66,7 +66,12 @@ export default function Today() {
     setError("");
     try {
       await saveEntries(
-        records.map((e) => ({ ...e, id: id(), at: new Date().toISOString() })),
+        records.map((e) => ({
+          ...e,
+          health: undefined,
+          id: id(),
+          at: new Date().toISOString(),
+        })),
       );
     } catch {
       setError("Could not repeat yesterday. Please try again.");

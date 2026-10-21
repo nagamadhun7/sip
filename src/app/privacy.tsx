@@ -87,13 +87,19 @@ export default function Privacy() {
         }
       />
       <T size={20} bold>
-        Permissions and backups
+        Permissions, Health and backups
       </T>
       <T>
-        Camera permission is used only to scan barcodes. Notifications are
-        optional. Your operating system may include app data in device backups
-        according to your backup settings. Exported files go only to the
-        destination you choose in the share sheet.
+        Camera permission scans barcodes and photographs labels. Label photos
+        stay in app storage. Optional Health sync writes known drink nutrients
+        and fluid intake to Apple Health or Health Connect, and imports
+        hydration records into SQLite. Sync does not send Health data to the
+        recipe server. You can disconnect in Settings and manage permissions in
+        Health. Deleting a synced entry propagates to samples Sip wrote; records
+        from other apps are not deleted. Notifications are optional. Your
+        operating system may include app data in device backups according to
+        your backup settings. Exported files go only to the destination you
+        choose in the share sheet.
       </T>
       <T size={20} bold>
         Delete your data

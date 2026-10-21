@@ -5,6 +5,17 @@ export function parseUSDA(barcode: string, food: any): Drink | null {
     barcode.replace(/^0+/, "")
   )
     return null;
+  const category =
+    String(food.brandedFoodCategory ?? food.foodCategory?.description ?? "") +
+    " " +
+    String(food.description ?? "");
+  if (
+    /dressing|sauce|soup|spread|ice cream/i.test(category) ||
+    !/beverage|drink|coffee|tea|milk|juice|water|soda|nectar|cola|brew/i.test(
+      category,
+    )
+  )
+    return null;
   const serving = Number(food.servingSize),
     unit = String(food.servingSizeUnit ?? "").toLowerCase();
   if (
