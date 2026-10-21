@@ -1,3 +1,4 @@
+import { LanguageControls } from "../components/language-controls";
 import { AlcoholControls } from "../components/alcohol-controls";
 import { CutbackControls } from "../components/cutback-controls";
 import { SituationControls } from "../components/situation-controls";
@@ -67,6 +68,7 @@ export default function SettingsScreen() {
   }
   return (
     <Page>
+      <LanguageControls />
       <SituationControls />
       <CutbackControls />
       <AlcoholControls />
@@ -107,7 +109,7 @@ export default function SettingsScreen() {
       ))}
       <Row
         title="Units"
-        detail="Fluid ounces are US fl oz"
+        detail={store.settings.locale==="en-GB"?"Fluid ounces are imperial fl oz":"Fluid ounces are US fl oz"}
         value={store.settings.units === "ml" ? "ml" : "fl oz"}
         onPress={
           busy

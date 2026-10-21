@@ -1,3 +1,4 @@
+import { setLocale } from "../features/locale";
 import { requireAlcoholAccess } from "../features/alcohol";
 import React, {
   createContext,
@@ -53,6 +54,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const hydrate = useCallback(async () => {
     try {
       const loaded = await storage.load();
+      setLocale(loaded.settings.locale??"en-US");
       setState(loaded);
       setReady(true);
     } catch {
@@ -66,7 +68,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     void storage.load().then(
       (loaded) => {
         if (active) {
-          setState(loaded);
+          setLocale(loaded.settings.locale??"en-US");
+      setState(loaded);
           setReady(true);
         }
       },

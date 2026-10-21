@@ -1,3 +1,4 @@
+import { translate } from "../features/locale";
 import React from "react";
 import {
   View,
@@ -39,7 +40,7 @@ export function T({
         style,
       ]}
     >
-      {children}
+      {Array.isArray(children)?children.map(c=>translate(c) as React.ReactNode):translate(children) as React.ReactNode}
     </Text>
   );
 }
@@ -221,11 +222,11 @@ export function Input({
         {label}
       </T>
       <TextInput
-        accessibilityLabel={label}
+        accessibilityLabel={String(translate(label))}
         value={value}
         onChangeText={onChangeText}
         keyboardType={numeric ? "decimal-pad" : "default"}
-        placeholder={placeholder}
+        placeholder={placeholder?String(translate(placeholder)):undefined}
         placeholderTextColor={colors.muted}
         multiline={multiline}
         editable={editable}

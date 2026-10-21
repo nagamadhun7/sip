@@ -1,3 +1,4 @@
+import { normalizeDrinkText } from "../features/locale";
 import { catalogDrinks } from "../lib/tracking";
 import React, { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
@@ -115,6 +116,7 @@ export function LogInput() {
           setError(message);
           setListening(false);
         },
+        store.settings.locale??"en-US",
       );
       setListening(true);
     } catch (e) {
@@ -131,7 +133,7 @@ export function LogInput() {
     setNotice("");
     const now = new Date();
     try {
-      let result = parseLocal(text, catalog, store.containers, now);
+      let result = parseLocal(normalizeDrinkText(text,store.settings.locale??"en-US"), catalog, store.containers, now,store.settings.locale??"en-US");
       const local = result !== null;
       if (!result) {
         const safe = checkRequest(text);

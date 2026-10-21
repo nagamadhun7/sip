@@ -1,3 +1,5 @@
+import { regionalOunce } from "../features/locale.ts";
+import type { AppLocale } from "../features/locale.ts";
 import { z } from "zod";
 import type { Drink, Entry } from "../lib/model.ts";
 import type { Container } from "../lib/tracking.ts";
@@ -69,6 +71,7 @@ export function parseLocal(
   catalog: Drink[],
   containers: Container[] = [],
   now = new Date(),
+  locale: AppLocale = "en-US",
 ): ParsedLog[] | null {
   if (
     /\b(pizza|meal|medicine|supplement|extract|powder|pill|ignore|instructions|system|detox|blood pressure)\b/i.test(
@@ -139,7 +142,7 @@ export function parseLocal(
         (/^(l|liter|litre)/.test(amount[2])
           ? 1000
           : /oz|ounce/.test(amount[2])
-            ? 29.5735295625
+            ? regionalOunce(locale)
             : 1)
       : (container?.ml ?? d.serving) * (count ? Number(count[1]) : 1);
     if (!Number.isFinite(ml) || ml <= 0 || ml > 10000) return null;

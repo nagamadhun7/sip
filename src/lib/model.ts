@@ -1,3 +1,4 @@
+import { getLocale, regionalOunce } from "../features/locale.ts";
 import type { Recipe, Profile } from "../drink-maker/core";
 export const nutrients = [
   "sugar",
@@ -31,6 +32,7 @@ export type Entry = {
   health?: { platform: "ios" | "android"; id: string };
 };
 export type Settings = {
+  locale?: import("../features/locale").AppLocale;
   alcohol?: {limit:number;grams:number;freeDays:string[]};
   cutback?: import("../features/cutback").Cutback;
   situation?: import("../features/situations").Situation;
@@ -138,7 +140,7 @@ export function lastDays(count = 7, until = new Date()) {
 }
 export function formatVolume(ml: number, units: "ml" | "oz" = "ml") {
   return units === "oz"
-    ? `${+(ml / 29.5735295625).toFixed(1)} fl oz`
+    ? `${+(ml / regionalOunce(getLocale())).toFixed(1)} fl oz`
     : ml >= 1000
       ? `${+(ml / 1000).toFixed(2)} L`
       : `${Math.round(ml)} ml`;

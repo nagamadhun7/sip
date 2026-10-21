@@ -1,3 +1,4 @@
+import { getLocale, regionalOunce } from "../features/locale.ts";
 import type { Drink, Nutrient } from "../lib/model.ts";
 import { validateEntry } from "../lib/model.ts";
 import { entriesFromParsed } from "./parse.ts";
@@ -11,7 +12,7 @@ export const reviewRows = (
   rows.map((row) => ({
     ...row,
     portion: String(
-      +(row.amount_ml / (units === "oz" ? 29.5735295625 : 1)).toFixed(3),
+      +(row.amount_ml / (units === "oz" ? regionalOunce(getLocale()) : 1)).toFixed(3),
     ),
   }));
 
@@ -28,7 +29,7 @@ export function reviewEntries(
       amount_ml:
         Number(row.portion) === Number(reviewRows([row], units)[0].portion)
           ? row.amount_ml
-          : Number(row.portion) * (units === "oz" ? 29.5735295625 : 1),
+          : Number(row.portion) * (units === "oz" ? regionalOunce(getLocale()) : 1),
     })),
     catalog,
     newId,

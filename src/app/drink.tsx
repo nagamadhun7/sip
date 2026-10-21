@@ -1,3 +1,4 @@
+import { regionalOunce } from "../features/locale";
 import { DrinkIcon } from "../components/drink-icon";
 import { DrinkAppearance } from "../components/drink-appearance";
 import React, { useState } from "react";
@@ -68,7 +69,7 @@ export default function DrinkForm() {
       String(
         +(
           (existing?.ml ?? initial.serving) /
-          (store.settings.units === "oz" ? 29.5735295625 : 1)
+          (store.settings.units === "oz" ? regionalOunce(store.settings.locale??"en-US") : 1)
         ).toFixed(3),
       ),
     ),
@@ -93,7 +94,7 @@ export default function DrinkForm() {
     sodium: "mg",
     potassium: "mg",
   };
-  const factor = store.settings.units === "oz" ? 29.5735295625 : 1;
+  const factor = store.settings.units === "oz" ? regionalOunce(store.settings.locale??"en-US") : 1;
   const amount = Number(ml.replace(",", ".")) * factor;
   const norm = (s: string) =>
     s.trim() === "" ? null : Number(s.replace(",", "."));

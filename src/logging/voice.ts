@@ -3,6 +3,7 @@ export async function startVoice(
   onText: (text: string) => void,
   onEnd: () => void,
   onError: (message: string) => void,
+  locale = "en-US",
 ) {
   if (Constants.executionEnvironment === ExecutionEnvironment.StoreClient)
     throw Error(
@@ -25,7 +26,7 @@ export async function startVoice(
   const end = speech.addListener("end", onEnd);
   try {
     speech.start({
-      lang: "en-US",
+      lang: locale,
       interimResults: false,
       continuous: false,
       maxAlternatives: 1,
