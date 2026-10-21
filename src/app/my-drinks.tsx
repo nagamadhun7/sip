@@ -1,3 +1,4 @@
+import { alcoholAllowed, isAlcohol } from "../features/alcohol";
 import React, { useRef, useState } from "react";
 import { FlatList, View, Pressable, StyleSheet } from "react-native";
 import { router } from "expo-router";
@@ -43,7 +44,7 @@ export default function MyDrinks() {
       contentInsetAdjustmentBehavior="automatic"
       keyboardShouldPersistTaps="handled"
       contentContainerStyle={{ padding: 24, gap: 16, paddingBottom: 40 }}
-      data={store.library}
+      data={store.library.filter(d=>!isAlcohol(d)||alcoholAllowed(store.settings))}
       keyExtractor={(d) => d.id}
       ListHeaderComponent={
         <View style={{ gap: 16 }}>

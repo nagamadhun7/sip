@@ -1,3 +1,4 @@
+import { alcoholAllowed, isAlcohol } from "../features/alcohol";
 import { CompareDrinks } from "../components/compare-drinks";
 import { DrinkIcon } from "../components/drink-icon";
 import React, { useState } from "react";
@@ -14,7 +15,7 @@ export default function Add() {
     [busy, setBusy] = useState(false),
     [query, setQuery] = useState("");
   const list = catalogDrinks(library, catalog).filter((d) =>
-    d.name.toLowerCase().includes(query.toLowerCase()),
+    (!isAlcohol(d)||alcoholAllowed(settings))&&d.name.toLowerCase().includes(query.toLowerCase()),
   );
   return (
     <FlatList

@@ -15,6 +15,7 @@ export type Drink = {
   serving: number;
   nutrition: Nutrition;
   source: string;
+  alcohol_abv?: number | null;
   barcode?: string;
   label_photo?: string;
   missingNutrition?: Nutrient[];
@@ -30,6 +31,7 @@ export type Entry = {
   health?: { platform: "ios" | "android"; id: string };
 };
 export type Settings = {
+  alcohol?: {limit:number;grams:number;freeDays:string[]};
   cutback?: import("../features/cutback").Cutback;
   situation?: import("../features/situations").Situation;
   comparison?: [string,string];

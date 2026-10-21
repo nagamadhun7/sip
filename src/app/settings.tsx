@@ -1,3 +1,4 @@
+import { AlcoholControls } from "../components/alcohol-controls";
 import { CutbackControls } from "../components/cutback-controls";
 import { SituationControls } from "../components/situation-controls";
 import React, { useState } from "react";
@@ -68,6 +69,7 @@ export default function SettingsScreen() {
     <Page>
       <SituationControls />
       <CutbackControls />
+      <AlcoholControls />
       <Row
         title="Your profile"
         detail="Age, weight, sex and status"

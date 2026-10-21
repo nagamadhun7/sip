@@ -97,6 +97,7 @@ export default function DrinkForm() {
   const amount = Number(ml.replace(",", ".")) * factor;
   const norm = (s: string) =>
     s.trim() === "" ? null : Number(s.replace(",", "."));
+  const [abv,setAbv]=useState(initial.alcohol_abv==null?"":String(initial.alcohol_abv));
   const draft = (): Entry => ({
     id: existing?.id ?? id(),
     health: existing?.health,
@@ -104,6 +105,7 @@ export default function DrinkForm() {
     at: at.toISOString(),
     drink: {
       ...initial,
+      alcohol_abv:abv.trim()?Number(abv):undefined,
       name: name.trim(),
       serving: amount,
       missingNutrition: nutrients.every(
@@ -170,6 +172,7 @@ export default function DrinkForm() {
     try {
       if (!/^#[0-9a-f]{6}$/i.test(initial.color))
         throw Error("Enter a six-digit icon color, such as #6FAEE8.");
+      if(abv.trim()&&(!Number.isFinite(Number(abv))||Number(abv)<0||Number(abv)>100))throw Error("Enter ABV from 0 to 100 percent.");
       const entry = draft();
       validateEntry(entry);
       if (onlyLibrary || !base || params.custom)
@@ -250,6 +253,7 @@ export default function DrinkForm() {
           }
         />
       ) : null}
+      {(store.settings.profile?.age??0)>=18&&store.settings.makerProfile?.alcohol_tracking?<Input numeric label="Alcohol by volume (%), if alcoholic" value={abv} onChangeText={setAbv}/>:null}
       {initial.label_photo ? (
         <>
           <Image

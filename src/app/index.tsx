@@ -1,3 +1,4 @@
+import { AlcoholControls } from "../components/alcohol-controls";
 import { caffeineLimit } from "../features/cutback";
 import { situationTarget } from "../features/situations";
 import { DrinkIcon } from "../components/drink-icon";
@@ -276,7 +277,8 @@ export default function Today() {
           </View>
         ) : (
           <View>
-            {today.map((e) => (
+            <AlcoholControls summary />
+          {today.map((e) => (
               <Row
                 key={e.id}
                 title={e.drink.name}

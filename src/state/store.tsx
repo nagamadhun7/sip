@@ -1,3 +1,4 @@
+import { requireAlcoholAccess } from "../features/alcohol";
 import React, {
   createContext,
   use,
@@ -119,14 +120,17 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     ...state,
     serviceError: error,
     saveEntries: async (entries) => {
+      requireAlcoholAccess(entries,state.settings);
       await storage.putEntries(entries);
       await hydrate();
     },
     saveJournalEntries: async (entries) => {
+      requireAlcoholAccess(entries,state.settings);
       await storage.putJournalEntries(entries);
       await hydrate();
     },
     saveEntry: async (e) => {
+      requireAlcoholAccess([e],state.settings);
       await storage.putEntry(e);
       await hydrate();
     },
