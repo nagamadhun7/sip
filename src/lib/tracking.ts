@@ -1,3 +1,4 @@
+import { caffeineLimit } from "../features/cutback.ts";
 import { situationTarget } from "../features/situations.ts";
 import type { Entry, Settings, Drink } from "./model.ts";
 import { totals, onDay, localDay, caffeineNow } from "./model.ts";
@@ -115,7 +116,7 @@ export function progress(
   settings: Settings,
   day = localDay(),
 ) {
-  settings={...settings,water:situationTarget(settings,day)};
+  settings={...settings,water:situationTarget(settings,day),caffeine:caffeineLimit(settings,entries,day)};
   const rows = onDay(entries, day),
     sum = totals(rows),
     key = settings.focus;

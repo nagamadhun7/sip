@@ -1,3 +1,4 @@
+import { advanceCutback } from "../features/cutback";
 import { defaultReminderPreferences } from "./reminder-plan";
 import * as SQLite from "expo-sqlite";
 import { Drink, Entry, Settings, defaults, validateEntry } from "./model";
@@ -87,7 +88,8 @@ export async function load() {
     ...(pref ? JSON.parse(pref.payload) : {}),
     ...(profile ? { profile: JSON.parse(profile.payload) } : {}),
   } as Settings;
-  if (!pref || !JSON.parse(pref.payload).reminderPreferences)
+  if(settings.cutback) settings.cutback=advanceCutback(settings.cutback,rows.map(r=>JSON.parse(r.payload)));
+  if (!pref || !JSON.parse(pref.payload).reminderPreferences || JSON.stringify(settings)!==pref.payload)
     await d.runAsync(
       "INSERT OR REPLACE INTO preferences(id,payload) VALUES(1,?)",
       JSON.stringify(settings),

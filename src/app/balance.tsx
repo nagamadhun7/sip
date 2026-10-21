@@ -1,3 +1,4 @@
+import { caffeineLimit } from "../features/cutback";
 import { situationTarget } from "../features/situations";
 import React from "react";
 import { View } from "react-native";
@@ -6,7 +7,7 @@ import { localDay, onDay, totals, formatVolume } from "../lib/model";
 import { Page, T, Bar, colors } from "../components/ui";
 export default function Balance() {
   const { entries, settings: baseSettings } = useStore(),
-    settings={...baseSettings,water:situationTarget(baseSettings)},
+    settings={...baseSettings,water:situationTarget(baseSettings),caffeine:caffeineLimit(baseSettings,entries)},
     sum = totals(onDay(entries, localDay()));
   return (
     <Page>

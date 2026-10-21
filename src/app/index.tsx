@@ -1,3 +1,4 @@
+import { caffeineLimit } from "../features/cutback";
 import { situationTarget } from "../features/situations";
 import { DrinkIcon } from "../components/drink-icon";
 import React, { useState, useRef } from "react";
@@ -27,7 +28,7 @@ export default function Today() {
     [pending, setPending] = useState(false),
     day = useToday();
   const lock = useRef(false);
-  const settings={...baseSettings,water:situationTarget(baseSettings,day)};
+  const settings={...baseSettings,water:situationTarget(baseSettings,day),caffeine:caffeineLimit(baseSettings,entries,day)};
   const quicks = quickHistory(entries);
   if (!settings.onboarded) return <Redirect href="/onboarding" />;
   const today = onDay(entries, day),

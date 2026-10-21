@@ -1,3 +1,4 @@
+import { caffeineLimit } from "../features/cutback.ts";
 import { z } from "zod";
 import data from "../data/ingredients.json" with { type: "json" };
 import type {
@@ -511,8 +512,8 @@ export function buildContext(
   const cap = ["unknown", "under18"].includes(profile.age_band)
     ? 0
     : !profile.medical_plan && (profile.pregnant || profile.nursing)
-      ? Math.min(settings.caffeine, 200)
-      : settings.caffeine;
+      ? Math.min(caffeineLimit(settings,entries), 200)
+      : caffeineLimit(settings,entries);
   return {
     sugar_left: Math.max(0, settings.sugar - today.sugar),
     caffeine_left: Math.max(0, cap - today.caffeine),

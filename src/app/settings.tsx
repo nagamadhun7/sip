@@ -1,3 +1,4 @@
+import { CutbackControls } from "../components/cutback-controls";
 import { SituationControls } from "../components/situation-controls";
 import React, { useState } from "react";
 import { Linking } from "react-native";
@@ -66,6 +67,7 @@ export default function SettingsScreen() {
   return (
     <Page>
       <SituationControls />
+      <CutbackControls />
       <Row
         title="Your profile"
         detail="Age, weight, sex and status"
