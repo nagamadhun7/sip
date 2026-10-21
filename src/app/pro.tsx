@@ -1,5 +1,6 @@
+import { AccessiblePressable as Pressable } from "../components/accessible-pressable";
 import React, { useEffect, useState } from "react";
-import { Pressable, Linking } from "react-native";
+import {  Linking } from "react-native";
 import { router } from "expo-router";
 import type { PurchasesPackage } from "react-native-purchases";
 import { useStore } from "../state/store";

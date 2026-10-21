@@ -1,6 +1,7 @@
+import { AccessiblePressable as Pressable } from "../components/accessible-pressable";
 import { NotificationActions } from "../components/notification-actions";
 import React from "react";
-import { Pressable } from "react-native";
+import { } from "react-native";
 import { router } from "expo-router";
 import { T } from "../components/ui";
 import { Stack } from "expo-router/stack";
@@ -18,7 +19,7 @@ function MakerBack() {
       hitSlop={12}
       onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))}
     >
-      <T size={28} style={{ color: "#14436F" }}>
+      <T size={28} style={{ color: "#103B62" }}>
         ‹
       </T>
     </Pressable>
@@ -40,7 +41,7 @@ export default function Layout() {
               fontFamily: "Nunito_600SemiBold",
               color: "#1F2A33",
             },
-            headerTintColor: "#7A8691",
+            headerTintColor: "#596875",
             headerBackButtonDisplayMode: "minimal",
           }}
         >

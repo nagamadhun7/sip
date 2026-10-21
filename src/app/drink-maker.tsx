@@ -1,9 +1,10 @@
+import { AccessiblePressable as Pressable } from "../components/accessible-pressable";
 import { DrinkAppearance } from "../components/drink-appearance";
 import type { IconShape } from "../lib/drink-icons";
 import React, { useEffect, useRef, useState } from "react";
 import {
   View,
-  Pressable,
+  
   StyleSheet,
   Keyboard,
   ActivityIndicator,
@@ -52,7 +53,8 @@ function Primary({
       disabled={busy || disabled}
       onPress={onPress}
       style={{
-        height: 50,
+        minHeight: 50,
+        paddingVertical: 12,
         borderRadius: 25,
         backgroundColor: colors.blue,
         alignItems: "center",
@@ -63,7 +65,7 @@ function Primary({
       {busy ? (
         <ActivityIndicator />
       ) : (
-        <T bold style={{ color: "#14436F" }}>
+        <T bold style={{ color: "#103B62" }}>
           Save drink
         </T>
       )}
@@ -551,7 +553,7 @@ export default function DrinkMaker() {
             {generating ? (
               <ActivityIndicator />
             ) : (
-              <T bold style={{ color: "#14436F" }}>
+              <T bold style={{ color: "#103B62" }}>
                 Generate recipe
               </T>
             )}
@@ -625,7 +627,7 @@ export default function DrinkMaker() {
                   disabled={generating}
                   onPress={() => void generate(true)}
                 >
-                  <T style={{ color: "#14436F" }}>Try again</T>
+                  <T style={{ color: "#103B62" }}>Try again</T>
                 </Pressable>
                 <Pressable
                   onPress={() => {
@@ -633,7 +635,7 @@ export default function DrinkMaker() {
                     setMode(1);
                   }}
                 >
-                  <T style={{ color: "#14436F" }}>Edit in Lab</T>
+                  <T style={{ color: "#103B62" }}>Edit in Lab</T>
                 </Pressable>
               </View>
             </>
@@ -649,7 +651,7 @@ export default function DrinkMaker() {
       <ErrorText error={error} />
       {paywall ? (
         <Pressable onPress={() => router.push("/pro")}>
-          <T style={{ color: "#14436F" }}>View Sip Pro</T>
+          <T style={{ color: "#103B62" }}>View Sip Pro</T>
         </Pressable>
       ) : null}
     </Page>

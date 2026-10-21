@@ -1,9 +1,10 @@
+import { AccessiblePressable as Pressable } from "../components/accessible-pressable";
 import { AlcoholControls } from "../components/alcohol-controls";
 import { caffeineLimit } from "../features/cutback";
 import { situationTarget } from "../features/situations";
 import { DrinkIcon } from "../components/drink-icon";
 import React, { useState, useRef } from "react";
-import { View, Pressable, ScrollView } from "react-native";
+import { View, ScrollView, useWindowDimensions } from "react-native";
 import { Redirect, router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStore } from "../state/store";
@@ -28,6 +29,7 @@ export default function Today() {
   const [error, setError] = useState(""),
     [pending, setPending] = useState(false),
     day = useToday();
+  const {fontScale}=useWindowDimensions();
   const lock = useRef(false);
   const settings={...baseSettings,water:situationTarget(baseSettings,day),caffeine:caffeineLimit(baseSettings,entries,day)};
   const quicks = quickHistory(entries);
@@ -113,8 +115,8 @@ export default function Today() {
             accessibilityLabel={`Hydration balance, ${formatVolume(sum.water, settings.units)} of ${formatVolume(settings.water, settings.units)}`}
             onPress={() => router.push("/balance")}
             style={{
-              flexDirection: "row",
-              alignItems: "center",
+              flexDirection: fontScale>1.3?"column":"row",
+              alignItems: fontScale>1.3?"flex-start":"center",
               gap: 28,
               paddingVertical: 6,
               paddingLeft: 14,
@@ -225,7 +227,7 @@ export default function Today() {
             />
           </View>
         ) : null}
-        <View style={{ flexDirection: "row", gap: 24 }}>
+        <View style={{ flexDirection: fontScale>1.3?"column":"row", gap: 24 }}>
           {(["caffeine", "sugar", "calories"] as const).map((k) => (
             <Pressable
               key={k}

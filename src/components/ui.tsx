@@ -1,9 +1,10 @@
+import { AccessiblePressable as Pressable } from "./accessible-pressable";
 import { translate } from "../features/locale";
 import React from "react";
 import {
   View,
   Text,
-  Pressable,
+  
   ScrollView,
   TextInput,
   StyleSheet,
@@ -16,7 +17,7 @@ import Svg, { Path, Rect, ClipPath, Defs } from "react-native-svg";
 import { router } from "expo-router";
 export const colors = {
   ink: "#1F2A33",
-  muted: "#7A8691",
+  muted: "#596875",
   line: "rgba(31,42,51,0.08)",
   blue: "#6FAEE8",
   brown: "#A0724A",
@@ -35,6 +36,7 @@ export function T({
         {
           fontFamily: bold ? "Nunito_600SemiBold" : "Nunito_400Regular",
           fontSize: size,
+          flexShrink:1,
           color: muted ? colors.muted : colors.ink,
         },
         style,
@@ -99,7 +101,8 @@ export function Button({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={title}
+      accessibilityLabel={String(translate(title))}
+      accessibilityState={{disabled:disabled||busy,busy}}
       disabled={disabled || busy}
       onPress={onPress}
       style={({ pressed }) => ({
@@ -123,7 +126,7 @@ export function Button({
         <T
           bold
           style={{
-            color: danger ? "#AE4837" : secondary ? colors.ink : "#14436F",
+            color: danger ? "#AE4837" : secondary ? colors.ink : "#103B62",
           }}
         >
           {title}
@@ -409,7 +412,7 @@ export function TabBar({ active }: { active: "today" | "week" }) {
           borderColor: "white",
         }}
       >
-        <Icon name="plus" size={28} color="#14436F" />
+        <Icon name="plus" size={28} color="#103B62" />
       </Pressable>
       <Pressable
         accessibilityRole="tab"

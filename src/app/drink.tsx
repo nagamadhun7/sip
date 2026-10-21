@@ -1,8 +1,9 @@
+import { AccessiblePressable as Pressable } from "../components/accessible-pressable";
 import { regionalOunce } from "../features/locale";
 import { DrinkIcon } from "../components/drink-icon";
 import { DrinkAppearance } from "../components/drink-appearance";
 import React, { useState } from "react";
-import { View, Pressable, Alert, Platform, Image } from "react-native";
+import { View,  Alert, Platform, Image } from "react-native";
 import { router, useLocalSearchParams, Stack } from "expo-router";
 import { DateTimePicker } from "@expo/ui/community/datetime-picker";
 import { useStore } from "../state/store";

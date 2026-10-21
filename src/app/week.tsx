@@ -1,5 +1,6 @@
+import { AccessiblePressable as Pressable } from "../components/accessible-pressable";
 import React, { useState } from "react";
-import { View, ScrollView, Pressable } from "react-native";
+import { View, ScrollView, } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useStore } from "../state/store";
@@ -69,7 +70,7 @@ export default function Week() {
           </T>
           <T muted>average per calendar day</T>
         </View>
-        <View
+        <ScrollView horizontal accessibilityLabel="Weekly intake chart" contentContainerStyle={{minWidth:380,gap:12,alignItems:"flex-end",paddingBottom:10}}
           style={{
             flexDirection: "row",
             gap: 12,
@@ -81,6 +82,7 @@ export default function Week() {
             <Pressable
               key={day}
               onPress={() => setSelected(day)}
+              accessibilityState={{selected:day===selected}}
               accessibilityLabel={`${day}: ${formatVolume(daily[index].water, settings.units)}`}
               style={{
                 flex: 1,
@@ -99,13 +101,13 @@ export default function Week() {
                 }}
               />
               <T size={12} muted>
-                {new Date(day + "T12:00:00").toLocaleDateString([], {
-                  weekday: "narrow",
+                {day===selected?"✓ ":""}{new Date(day + "T12:00:00").toLocaleDateString([], {
+                  weekday: "short",
                 })}
               </T>
             </Pressable>
           ))}
-        </View>
+        </ScrollView>
         {(["water", "caffeine", "sugar", "sodium", "potassium"] as const).map(
           (k) => (
             <View key={k}>

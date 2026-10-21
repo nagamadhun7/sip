@@ -1,3 +1,4 @@
+import { AccessiblePressable as Pressable } from "../components/accessible-pressable";
 import { setLocale } from "../features/locale";
 import { requireAlcoholAccess } from "../features/alcohol";
 import React, {
@@ -11,7 +12,7 @@ import {
   ActivityIndicator,
   Text,
   View,
-  Pressable,
+  
   AppState,
 } from "react-native";
 import { Drink, Entry, Settings, defaults } from "../lib/model";

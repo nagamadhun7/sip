@@ -1,7 +1,8 @@
+import { AccessiblePressable as Pressable } from "../components/accessible-pressable";
 import { ShareRecipe } from "../components/share-recipe";
 import { alcoholAllowed, isAlcohol } from "../features/alcohol";
 import React, { useRef, useState } from "react";
-import { FlatList, View, Pressable, StyleSheet } from "react-native";
+import { FlatList, View,  StyleSheet } from "react-native";
 import { router } from "expo-router";
 import { DrinkIcon } from "../components/drink-icon";
 import { useStore } from "../state/store";
@@ -90,7 +91,7 @@ export default function MyDrinks() {
               onPress={() => void log(item)}
               style={{ padding: 12 }}
             >
-              <T bold style={{ color: "#14436F" }}>
+              <T bold style={{ color: "#103B62" }}>
                 {pending === item.id ? "Saving…" : "Log"}
               </T>
             </Pressable>

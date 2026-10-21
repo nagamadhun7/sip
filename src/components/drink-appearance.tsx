@@ -1,5 +1,6 @@
+import { AccessiblePressable as Pressable } from "./accessible-pressable";
 import React from "react";
-import { View, Pressable } from "react-native";
+import { View, } from "react-native";
 import { T, Input } from "./ui";
 import { DrinkIcon } from "./drink-icon";
 import { iconShapes, iconColor } from "../lib/drink-icons";
@@ -79,7 +80,7 @@ export function DrinkAppearance({
               borderRadius: 15,
               backgroundColor: c,
               borderWidth: c === color ? 3 : 0,
-              borderColor: "#14436F",
+              borderColor: "#103B62",
             }}
           />
         ))}
