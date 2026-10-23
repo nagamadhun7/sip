@@ -1,3 +1,5 @@
+import { alcoholAllowed, isAlcohol } from "../features/alcohol";
+import { pinnedDrinks } from "../features/history";
 import { AccessiblePressable as Pressable } from "../components/accessible-pressable";
 import { AlcoholControls } from "../components/alcohol-controls";
 import { caffeineLimit } from "../features/cutback";
@@ -15,6 +17,8 @@ import { T, Row, Icon, TabBar, ErrorText, Button } from "../components/ui";
 export default function Today() {
   const {
       entries,
+      library,
+      catalog,
       settings: baseSettings,
       saveEntry,
       saveEntries,
@@ -32,7 +36,18 @@ export default function Today() {
     water: situationTarget(baseSettings, day),
     caffeine: caffeineLimit(baseSettings, entries, day),
   };
-  const quicks = quickHistory(entries);
+  const favorites = pinnedDrinks(settings.favoriteDrinkIds ?? [], [
+    ...library,
+    ...catalog,
+  ]).filter((d) => !isAlcohol(d) || alcoholAllowed(settings));
+  const quicks = [
+    ...favorites.map((drink) => ({ drink, ml: drink.serving })),
+    ...quickHistory(entries).filter(
+      (e) =>
+        (!isAlcohol(e.drink) || alcoholAllowed(settings)) &&
+        !favorites.some((d) => d.id === e.drink.id),
+    ),
+  ];
   if (!settings.onboarded) return <Redirect href="/onboarding" />;
   const today = onDay(entries, day),
     sum = totals(today);
@@ -328,7 +343,7 @@ export default function Today() {
         </View>
         <View style={{ gap: 10, alignSelf: "stretch" }}>
           <T size={13} muted>
-            Quick add from your history
+            Quick add
           </T>
           <View
             style={{

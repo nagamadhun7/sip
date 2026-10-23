@@ -32,6 +32,8 @@ export type Entry = {
   health?: { platform: "ios" | "android"; id: string };
 };
 export type Settings = {
+  favoriteDrinkIds?: string[];
+  dailyNotes?: Record<string, string>;
   locale?: import("../features/locale").AppLocale;
   alcohol?: { limit: number; grams: number; freeDays: string[] };
   cutback?: import("../features/cutback").Cutback;

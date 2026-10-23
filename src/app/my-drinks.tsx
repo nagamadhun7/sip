@@ -98,6 +98,25 @@ export default function MyDrinks() {
               </T>
             </Pressable>
           </View>
+          <Button
+            secondary
+            title={
+              (store.settings.favoriteDrinkIds ?? []).includes(item.id)
+                ? "Unpin from quick add"
+                : "Pin to quick add"
+            }
+            onPress={() => {
+              const ids = store.settings.favoriteDrinkIds ?? [];
+              void store
+                .saveSettings({
+                  ...store.settings,
+                  favoriteDrinkIds: ids.includes(item.id)
+                    ? ids.filter((id) => id !== item.id)
+                    : [...ids, item.id],
+                })
+                .catch(() => setError("Could not save favorite. Try again."));
+            }}
+          />
           <ShareRecipe drink={item} />
           <Pressable
             accessibilityRole="button"
