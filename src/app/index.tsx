@@ -24,6 +24,7 @@ export default function Today() {
     safe = useSafeAreaInsets();
   const [error, setError] = useState(""),
     [pending, setPending] = useState(false),
+    [quickOpen, setQuickOpen] = useState(false),
     day = useToday();
   const { fontScale } = useWindowDimensions();
   const lock = useRef(false);
@@ -140,7 +141,7 @@ export default function Today() {
             <T bold>Today</T>
             <T muted>⌄</T>
           </Pressable>
-          <View style={{ flexDirection: "row", gap: 8 }}>
+          <View style={{ flexDirection: "row", gap: 4, alignItems: "center" }}>
             <Pressable
               accessibilityLabel="My drinks"
               onPress={() => router.push("/my-drinks")}
@@ -155,8 +156,67 @@ export default function Today() {
             >
               <Icon name="settings" size={21} />
             </Pressable>
+            <Pressable
+              accessibilityLabel="Quick add"
+              accessibilityState={{ expanded: quickOpen }}
+              onPress={() => setQuickOpen(!quickOpen)}
+              style={{
+                paddingHorizontal: 12,
+                paddingVertical: 10,
+                borderRadius: 22,
+                backgroundColor: "#F7F7F7",
+              }}
+            >
+              <T size={13} bold>
+                Quick add
+              </T>
+            </Pressable>
           </View>
         </View>
+        {quickOpen ? (
+          <View style={{ gap: 10, alignSelf: "stretch" }}>
+            {" "}
+            <T size={13} muted>
+              Quick add from your history
+            </T>
+            <View
+              style={{
+                flexDirection: fontScale > 1.3 ? "column" : "row",
+                flexWrap: "wrap",
+                gap: 10,
+              }}
+            >
+              {quicks.map((previous, idx) => (
+                <Pressable
+                  key={idx}
+                  disabled={pending}
+                  onPress={() => void quick(idx)}
+                  style={{
+                    backgroundColor: "#F7F7F7",
+                    borderRadius: 22,
+                    padding: 12,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  <DrinkIcon drink={previous.drink} size={24} />
+                  <T size={13}>
+                    {previous.drink.name} ·{" "}
+                    {formatVolume(previous.ml, settings.units)}
+                  </T>
+                </Pressable>
+              ))}
+              <Pressable
+                disabled={pending}
+                onPress={() => void repeatYesterday()}
+                style={{ padding: 12 }}
+              >
+                <T size={13}>Same as yesterday</T>
+              </Pressable>
+            </View>
+          </View>
+        ) : null}
         <Pressable
           accessibilityLabel={`${focus}: ${totalText}. Open balance`}
           onPress={() =>
@@ -375,45 +435,6 @@ export default function Today() {
             />
           </View>
         ) : null}
-        <T size={13} muted>
-          Quick add from your history
-        </T>
-        <View
-          style={{
-            flexDirection: fontScale > 1.3 ? "column" : "row",
-            flexWrap: "wrap",
-            gap: 10,
-          }}
-        >
-          {quicks.map((previous, idx) => (
-            <Pressable
-              key={idx}
-              disabled={pending}
-              onPress={() => void quick(idx)}
-              style={{
-                backgroundColor: "#F7F7F7",
-                borderRadius: 22,
-                padding: 12,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 8,
-              }}
-            >
-              <DrinkIcon drink={previous.drink} size={24} />
-              <T size={13}>
-                {previous.drink.name} ·{" "}
-                {formatVolume(previous.ml, settings.units)}
-              </T>
-            </Pressable>
-          ))}
-          <Pressable
-            disabled={pending}
-            onPress={() => void repeatYesterday()}
-            style={{ padding: 12 }}
-          >
-            <T size={13}>Same as yesterday</T>
-          </Pressable>
-        </View>
       </ScrollView>
       <TabBar active="today" />
     </View>
