@@ -12,6 +12,7 @@ import { catalogDrinks } from "../lib/tracking";
 import { LogInput } from "../components/log-input";
 export default function Add() {
   const params = useLocalSearchParams<{ mode?: string }>();
+  const [autoVoice, setAutoVoice] = useState(params.mode === "voice");
   const [tab, setTab] = useState<"Note" | "Drinks" | "More">("Note");
   const { library, catalog, containers, saveEntry, settings } = useStore(),
     [notice, setNotice] = useState(""),
@@ -58,10 +59,13 @@ export default function Add() {
               </T>
               {params.mode === "voice" ? (
                 <T muted>
-                  Tap Voice log to speak, then check your drinks before saving.
+                  Speak your drinks, then check the amounts before saving.
                 </T>
               ) : null}
-              <LogInput />
+              <LogInput
+                autoStartVoice={autoVoice}
+                onAutoStartHandled={() => setAutoVoice(false)}
+              />
             </>
           ) : null}
           {tab === "More" ? (

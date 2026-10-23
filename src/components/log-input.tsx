@@ -1,7 +1,7 @@
 import { partitionInput } from "../features/non-drink";
 import { normalizeDrinkText } from "../features/locale";
 import { catalogDrinks } from "../lib/tracking";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import { router } from "expo-router";
 import { useStore } from "../state/store";
@@ -18,13 +18,20 @@ import { checkRequest } from "../drink-maker/core";
 import { callService, MakerError } from "../drink-maker/client";
 import { startVoice } from "../logging/voice";
 import { id, formatVolume, totals, nutrients } from "../lib/model";
-export function LogInput() {
+export function LogInput({
+  autoStartVoice = false,
+  onAutoStartHandled,
+}: {
+  autoStartVoice?: boolean;
+  onAutoStartHandled?: () => void;
+}) {
   const store = useStore(),
     [open, setOpen] = useState(true),
     [text, setText] = useState(""),
     [review, setReview] = useState<ReviewRow[]>([]),
     [busy, setBusy] = useState(false),
     [listening, setListening] = useState(false),
+    [startingVoice, setStartingVoice] = useState(false),
     [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
     [paywall, setPaywall] = useState(false),
@@ -37,14 +44,18 @@ export function LogInput() {
   const cleanup = useRef<null | (() => void)>(null),
     lock = useRef(false),
     controller = useRef<AbortController | null>(null);
+  const mounted = useRef(true),
+    autoStarted = useRef(false),
+    voiceAttempt = useRef(0);
   const catalog = catalogDrinks(store.library, store.catalog);
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
       cleanup.current?.();
       controller.current?.abort();
-    },
-    [],
-  );
+    };
+  }, []);
   useEffect(() => {
     let active = true;
     void loadJournalDraft().then(
@@ -65,7 +76,7 @@ export function LogInput() {
     };
   }, []);
   const draftRevision = useRef(0);
-  function writeNote(value: string) {
+  const writeNote = useCallback((value: string) => {
     const revision = ++draftRevision.current;
     setText(value);
     setReview([]);
@@ -84,7 +95,7 @@ export function LogInput() {
           );
       },
     );
-  }
+  }, []);
   let preview: ReturnType<typeof reviewEntries> = [];
   let previewError = "";
   if (review.length) {
@@ -100,7 +111,7 @@ export function LogInput() {
     }
   }
   const sum = totals(preview);
-  async function voice() {
+  const voice = useCallback(async () => {
     setOpen(true);
     setError("");
     if (listening) {
@@ -109,10 +120,13 @@ export function LogInput() {
       return;
     }
     cleanup.current?.();
+    const attempt = ++voiceAttempt.current;
+    setStartingVoice(true);
     try {
-      cleanup.current = await startVoice(
+      const stop = await startVoice(
         (transcript) => {
-          writeNote(transcript);
+          if (mounted.current && attempt === voiceAttempt.current)
+            writeNote(transcript);
         },
         () => setListening(false),
         (message) => {
@@ -121,11 +135,26 @@ export function LogInput() {
         },
         store.settings.locale ?? "en-US",
       );
+      if (!mounted.current || attempt !== voiceAttempt.current) {
+        stop();
+        return;
+      }
+      cleanup.current = stop;
       setListening(true);
     } catch (e) {
-      setError((e as Error).message);
+      if (mounted.current && attempt === voiceAttempt.current)
+        setError((e as Error).message);
+    } finally {
+      if (mounted.current && attempt === voiceAttempt.current)
+        setStartingVoice(false);
     }
-  }
+  }, [listening, store.settings.locale, writeNote]);
+  useEffect(() => {
+    if (!autoStartVoice || !draftReady || autoStarted.current) return;
+    autoStarted.current = true;
+    onAutoStartHandled?.();
+    void voice();
+  }, [autoStartVoice, draftReady, voice, onAutoStartHandled]);
   async function match(includeSoup = false) {
     if (lock.current) return;
     lock.current = true;
@@ -238,11 +267,24 @@ export function LogInput() {
         />
         <Button
           secondary
-          title={listening ? "Stop listening" : "Voice log"}
+          title={
+            startingVoice
+              ? "Starting microphone…"
+              : listening
+                ? "Stop listening"
+                : "Voice log"
+          }
           onPress={() => void voice()}
-          disabled={busy || !draftReady}
+          disabled={busy || !draftReady || startingVoice}
         />
       </View>
+      {listening ? (
+        <View accessibilityLiveRegion="polite">
+          <T bold>
+            Listening… Speak your drinks, then check them before saving.
+          </T>
+        </View>
+      ) : null}
       {open ? (
         <>
           <Input
