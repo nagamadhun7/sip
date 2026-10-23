@@ -1,3 +1,4 @@
+import { CravingPatterns } from "../components/craving-patterns";
 import { goalsForSettings } from "../features/drink-goals";
 import { goalFluid, fastingEnabled } from "../features/conditions";
 import { WeeklyDrinkStory } from "../components/weekly-drink-story";
@@ -106,6 +107,7 @@ export default function Week() {
               </Pressable>
             </View>
             <WeeklyDrinkStory end={end} completeLastDay={offset < 0} />
+            {offset === 0 ? <CravingPatterns /> : null}
             <View>
               <T size={52} bold>
                 {formatVolume(data.water / 7, settings.units)}

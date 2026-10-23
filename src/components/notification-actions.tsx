@@ -1,3 +1,4 @@
+import { cravingDefaults } from "../features/craving-patterns";
 import { useEffect } from "react";
 import * as Notifications from "expo-notifications";
 import { router } from "expo-router";
@@ -31,11 +32,26 @@ export function NotificationActions() {
           if (action === "SNOOZE") {
             await store.saveSettings({
               ...store.settings,
+              ...(n.request.content.data?.kind === "craving"
+                ? {
+                    cravingNudges: {
+                      ...cravingDefaults,
+                      ...store.settings.cravingNudges,
+                      snoozed_until: Date.now() + p.snooze_minutes * 60000,
+                      snoozed_kind:
+                        n.request.content.data?.pattern === "soda"
+                          ? ("soda" as const)
+                          : ("third-coffee" as const),
+                    },
+                  }
+                : {}),
               reminderPreferences: {
                 ...p,
                 snoozed_until: Date.now() + p.snooze_minutes * 60000,
               },
             });
+          } else if (n.request.content.data?.kind === "craving") {
+            router.push({ pathname: "/week", params: { patterns: "1" } });
           } else if (action === "LOG") {
             const data = n.request.content.data ?? {},
               drink = [...store.library, ...store.catalog].find(

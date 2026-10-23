@@ -1,3 +1,4 @@
+import { CravingPatterns } from "../components/craving-patterns";
 import { HydrationAdjustmentControls } from "../components/hydration-adjustment-controls";
 import { ConditionControls } from "../components/condition-controls";
 import { LanguageControls } from "../components/language-controls";
@@ -72,11 +73,11 @@ export default function SettingsScreen() {
     const previous = store.settings,
       next = { ...previous, reminders: enabled };
     try {
-      await setReminders(next, store.entries);
+      await setReminders(next, store.entries, enabled);
       try {
         await store.saveSettings(next);
       } catch (e) {
-        await setReminders(previous, store.entries);
+        await setReminders(previous, store.entries, false);
         throw e;
       }
     } catch (e) {
@@ -113,6 +114,9 @@ export default function SettingsScreen() {
       </SettingsSection>
       <SettingsSection title="Hot weather and exercise">
         <HydrationAdjustmentControls />
+      </SettingsSection>
+      <SettingsSection title="Craving-time nudges">
+        <CravingPatterns controls />
       </SettingsSection>
       <SettingsSection title="Caffeine cut-back">
         <CutbackControls />

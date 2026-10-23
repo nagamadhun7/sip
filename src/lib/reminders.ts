@@ -27,12 +27,16 @@ export function setReminders(
   const run = sequence
     .catch(() => {})
     .then(async () => {
-      if (settings.reminders && ask) await requestReminderPermission();
+      if ((settings.reminders || settings.cravingNudges?.enabled) && ask)
+        await requestReminderPermission();
       const scheduled = await Notifications.getAllScheduledNotificationsAsync();
       for (const n of scheduled)
-        if ((n.identifier.startsWith("sip:")||n.content.title==="Time for a sip?"))
+        if (
+          n.identifier.startsWith("sip:") ||
+          n.content.title === "Time for a sip?"
+        )
           await Notifications.cancelScheduledNotificationAsync(n.identifier);
-      if (!settings.reminders) {
+      if (!settings.reminders && !settings.cravingNudges?.enabled) {
         await rememberNotifications([]);
         return;
       }
@@ -41,6 +45,18 @@ export function setReminders(
         {
           identifier: "LOG",
           buttonTitle: "Log drink",
+          options: { opensAppToForeground: true },
+        },
+        {
+          identifier: "SNOOZE",
+          buttonTitle: "Snooze",
+          options: { opensAppToForeground: true },
+        },
+      ]);
+      await Notifications.setNotificationCategoryAsync("sip-craving", [
+        {
+          identifier: "REVIEW_PATTERN",
+          buttonTitle: "Review options",
           options: { opensAppToForeground: true },
         },
         {
@@ -63,12 +79,19 @@ export function setReminders(
         await Notifications.scheduleNotificationAsync({
           identifier: r.id,
           content: {
-            title: r.kind === "caffeine" ? "Caffeine check" : "Time for a sip?",
+            title:
+              r.kind === "craving"
+                ? "A moment to choose"
+                : r.kind === "caffeine"
+                  ? "Caffeine check"
+                  : "Time for a sip?",
             body: r.body,
             sound: "default",
-            categoryIdentifier: "sip-drink",
+            categoryIdentifier:
+              r.kind === "craving" ? "sip-craving" : "sip-drink",
             data: {
               kind: r.kind,
+              pattern: r.pattern ?? null,
               drink_id: r.drink_id ?? null,
               ml: r.ml ?? null,
             },

@@ -11,7 +11,11 @@ export default function Privacy() {
   async function erase() {
     setBusy(true);
     try {
-      await setReminders({ ...store.settings, reminders: false });
+      await setReminders({
+        ...store.settings,
+        reminders: false,
+        cravingNudges: undefined,
+      });
       await store.erase();
       router.dismissAll();
       router.replace("/onboarding");
@@ -35,6 +39,12 @@ export default function Privacy() {
         Drink history, custom drinks, pinned favorites, daily notes and
         preferences are stored in a local SQLite database. The free tracker does
         not require sign-in and does not upload your drink history to a server.
+      </T>
+      <T>
+        Drink-time patterns are calculated on this device from completed-day
+        logs. Optional pattern nudges use local notifications; no drink history
+        is sent for this analysis. Notification text can appear on your lock
+        screen according to device settings.
       </T>
       <T size={20} bold>
         Weather and tracking helpers

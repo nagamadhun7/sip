@@ -1,3 +1,10 @@
+import {
+  cravingPatterns,
+  cravingDefaults,
+  patternNudge,
+  drinkFamily,
+  type DrinkPattern,
+} from "../features/craving-patterns.ts";
 import { goalFluid } from "../features/conditions.ts";
 import {
   activeSituation,
@@ -33,8 +40,9 @@ export const defaultReminderPreferences: ReminderPreferences = {
 export type Reminder = {
   id: string;
   at: number;
-  kind: "hydration" | "per-drink" | "caffeine";
+  kind: "hydration" | "per-drink" | "caffeine" | "craving";
   body: string;
+  pattern?: DrinkPattern["kind"];
   drink_id?: string;
   ml?: number;
 };
@@ -58,11 +66,12 @@ export function planReminders(
   now: Date,
   pastCounts: Record<string, number> = {},
 ): Reminder[] {
-  if (!settings.reminders) return [];
+  const cravings = { ...cravingDefaults, ...settings.cravingNudges };
+  if (!settings.reminders && !cravings.enabled) return [];
   const p = { ...defaultReminderPreferences, ...settings.reminderPreferences };
   const candidates: Reminder[] = [];
   const water = entries.find((e) => e.drink.id === "water");
-  const add = (at: Date, kind: Reminder["kind"]) => {
+  const add = (at: Date, kind: Reminder["kind"], pattern?: DrinkPattern) => {
     if (
       at.getTime() <= now.getTime() + 1000 ||
       at.getTime() < (p.snoozed_until ?? 0) ||
@@ -85,18 +94,26 @@ export function planReminders(
     const elapsed = (at.getHours() * 60 + at.getMinutes() - wake + 1440) % 1440;
     const expected =
       situationTarget(settings, date) * Math.min(1, elapsed / span);
-    if (kind !== "caffeine" && p.only_behind && taken >= expected) return;
-    const identifier = `sip:${date}:${kind}:${at.getHours()}:${at.getMinutes()}`;
+    if (
+      kind !== "caffeine" &&
+      kind !== "craving" &&
+      p.only_behind &&
+      taken >= expected
+    )
+      return;
+    const identifier = `sip:${date}:${kind}${pattern ? ":" + pattern.kind : ""}:${at.getHours()}:${at.getMinutes()}`;
     if (candidates.some((r) => r.id === identifier)) return;
     candidates.push({
       id: identifier,
       at: at.getTime(),
       kind,
-      body:
-        kind === "caffeine"
+      ...(pattern ? { pattern: pattern.kind } : {}),
+      body: pattern
+        ? patternNudge(pattern)
+        : kind === "caffeine"
           ? "Your saved caffeine cutoff is approaching. Review today’s caffeine before your next drink."
           : "Check your logged intake and add a drink if you need one.",
-      ...(kind !== "caffeine" && water
+      ...(kind !== "caffeine" && kind !== "craving" && water
         ? { drink_id: water.drink.id, ml: water.ml }
         : {}),
     });
@@ -105,19 +122,22 @@ export function planReminders(
     const date = new Date(now);
     date.setDate(date.getDate() + day);
     const mode = activeSituation(settings, localDay(date));
-    if (mode) {
+    if (settings.reminders && mode) {
       for (let minute = 0; minute < 1440; minute += mode.interval_minutes) {
         const at = new Date(date);
         at.setHours(0, minute, 0, 0);
         add(at, "hydration");
       }
     }
-    for (const hour of mode ? [] : settings.reminderHours) {
+    for (const hour of mode || !settings.reminders
+      ? []
+      : settings.reminderHours) {
       const at = new Date(date);
       at.setHours(hour, 0, 0, 0);
       add(at, "hydration");
     }
     if (
+      settings.reminders &&
       p.caffeine_cutoff &&
       entries.some(
         (e) =>
@@ -132,7 +152,7 @@ export function planReminders(
       add(cutoff, "caffeine");
     }
   }
-  if (p.per_drink && entries.length) {
+  if (settings.reminders && p.per_drink && entries.length) {
     const last = entries.reduce((a, b) => (a.at > b.at ? a : b));
     const at = new Date(
       Date.parse(last.at) +
@@ -141,8 +161,56 @@ export function planReminders(
     );
     add(at, "per-drink");
   }
-  if (p.snoozed_until && p.snoozed_until > now.getTime())
+  if (
+    settings.reminders &&
+    !(cravings.enabled && (cravings.snoozed_until ?? 0) > now.getTime()) &&
+    p.snoozed_until &&
+    p.snoozed_until > now.getTime()
+  )
     add(new Date(p.snoozed_until), "hydration");
+  if (cravings.enabled) {
+    const patterns = cravingPatterns(entries, now).patterns.filter((p) =>
+      p.kind === "soda" ? cravings.soda : cravings.thirdCoffee,
+    );
+    const lead = Math.max(
+      0,
+      Math.min(
+        60,
+        Number.isFinite(cravings.lead_minutes) ? cravings.lead_minutes : 10,
+      ),
+    );
+    const thirdAlreadyLogged = (date: string) =>
+      onDay(entries, date).filter(
+        (e) =>
+          Date.parse(e.at) <= now.getTime() &&
+          drinkFamily(e.drink) === "coffee",
+      ).length >= 3;
+    const snoozed = patterns.find(
+      (p) =>
+        p.kind === cravings.snoozed_kind &&
+        !(
+          p.kind === "third-coffee" &&
+          thirdAlreadyLogged(localDay(new Date(cravings.snoozed_until ?? 0)))
+        ),
+    );
+    if (snoozed && (cravings.snoozed_until ?? 0) > now.getTime())
+      add(new Date(cravings.snoozed_until!), "craving", snoozed);
+    for (let day = 0; day < 7; day++)
+      for (const pattern of patterns) {
+        const at = new Date(now);
+        at.setDate(at.getDate() + day);
+        const patternDay = localDay(at);
+        at.setHours(0, pattern.minute - lead, 0, 0);
+        // If today's third coffee has already been logged, don't nudge after the fact.
+        if (
+          pattern.kind === "third-coffee" &&
+          patternDay === localDay(now) &&
+          thirdAlreadyLogged(localDay(now))
+        )
+          continue;
+        add(at, "craving", pattern);
+      }
+  }
   const counts = { ...pastCounts };
   return candidates
     .sort((a, b) => a.at - b.at)

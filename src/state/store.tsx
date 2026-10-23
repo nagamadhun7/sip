@@ -150,6 +150,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const reminderKey = JSON.stringify([
     state.entries,
     state.settings.reminders,
+    state.settings.cravingNudges,
     state.settings.reminderPreferences,
     state.settings.reminderHours,
     state.settings.situation,
@@ -244,7 +245,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     },
     erase: async () => {
       await stopHealth();
-      await setReminders({ ...state.settings, reminders: false }, [], false);
+      await setReminders(
+        { ...state.settings, reminders: false, cravingNudges: undefined },
+        [],
+        false,
+      );
       Notifications.clearLastNotificationResponse();
       await storage.erase();
       await hydrate();
