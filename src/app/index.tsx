@@ -105,6 +105,20 @@ export default function Today() {
       setPending(false);
     }
   };
+  const grouped = Array.from(
+    today
+      .reduce((map, entry) => {
+        const key = entry.drink.id;
+        const previous = map.get(key);
+        map.set(key, {
+          drink: entry.drink,
+          ml: (previous?.ml ?? 0) + entry.ml,
+        });
+        return map;
+      }, new Map<string, { drink: (typeof today)[number]["drink"]; ml: number }>())
+      .values(),
+  ).sort((a, b) => b.ml - a.ml);
+  const maxVolume = Math.max(1, ...grouped.map((g) => g.ml));
   return (
     <View style={{ flex: 1, backgroundColor: "white", paddingTop: safe.top }}>
       <ScrollView
@@ -157,6 +171,83 @@ export default function Today() {
         </View>
 
         <WaterHeadline />
+        {grouped.length ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{
+              gap: 12,
+              alignItems: "flex-end",
+              paddingTop: 10,
+            }}
+          >
+            {grouped.map((g, i) => (
+              <Pressable
+                key={g.drink.id}
+                accessibilityLabel={`${g.drink.name}, ${formatVolume(g.ml, settings.units)} today. Edit drink`}
+                onPress={() =>
+                  router.push({
+                    pathname: "/drink",
+                    params: { drink: g.drink.id },
+                  })
+                }
+                style={{
+                  width: Math.max(74, fontScale > 1.3 ? 100 : 74),
+                  height: 240,
+                  justifyContent: "flex-end",
+                }}
+              >
+                <View
+                  style={{
+                    height: (g.ml / maxVolume) * 235,
+                    position: "absolute",
+                    bottom: 0,
+                    width: "100%",
+                    borderRadius: 20,
+                    backgroundColor: [
+                      "#F8EBCB",
+                      "#F3D4DF",
+                      "#F8DDB7",
+                      "#DCE8E5",
+                    ][i % 4],
+                    paddingHorizontal: 7,
+                    paddingVertical: 0,
+                    justifyContent: "flex-end",
+                    alignItems: "center",
+                    gap: 5,
+                  }}
+                ></View>
+                <View
+                  style={{
+                    alignItems: "center",
+                    gap: 4,
+                    paddingTop: 9,
+                    minHeight: 70,
+                    paddingBottom: 15,
+                  }}
+                >
+                  <DrinkIcon drink={g.drink} size={26} />
+                  <T size={12} bold style={{ textAlign: "center" }}>
+                    {formatVolume(g.ml, settings.units)}
+                  </T>
+                  <T size={11} style={{ textAlign: "center" }}>
+                    {g.drink.name}
+                  </T>
+                </View>
+              </Pressable>
+            ))}
+          </ScrollView>
+        ) : (
+          <View style={{ paddingVertical: 36, alignItems: "center", gap: 10 }}>
+            <T size={22} bold>
+              Add your first drink
+            </T>
+            <T muted style={{ textAlign: "center" }}>
+              Your drinks and daily totals will appear here.
+            </T>
+            <Button title="Add a drink" onPress={() => router.push("/add")} />
+          </View>
+        )}
         <HomeDrinkGoals />
         <View style={{ gap: 10, alignSelf: "stretch" }}>
           <T size={13} muted>
