@@ -5,7 +5,7 @@ import type { Dependencies } from "./service";
 import { DurableObject } from "cloudflare:workers";
 import type { CacheValue } from "./service";
 import { handleMaker, generateOpenAI, json } from "./service";
-import { foodLookup } from "./lookup";
+import { foodLookup, searchUSDADrinks } from "./lookup";
 interface Env {
   FDC_API_KEY?: string;
   MAKER_USERS: DurableObjectNamespace<MakerUser>;
@@ -47,7 +47,9 @@ export class MakerUser extends DurableObject<Env> {
       return json({ message: "Invalid JSON." }, 400);
     }
     const env = this.env;
-    if (new URL(request.url).pathname === "/food-lookup") {
+    if (
+      ["/food-lookup", "/drink-catalog"].includes(new URL(request.url).pathname)
+    ) {
       const day = new Date().toISOString().slice(0, 10);
       const usage = await this.ctx.storage.get<{ day: string; count: number }>(
         "lookup-usage",
@@ -59,6 +61,31 @@ export class MakerUser extends DurableObject<Env> {
           429,
         );
       await this.ctx.storage.put("lookup-usage", { day, count: count + 1 });
+      if (new URL(request.url).pathname === "/drink-catalog") {
+        const query = (body as { query?: unknown })?.query;
+        if (typeof query !== "string")
+          return searchUSDADrinks(query, env.FDC_API_KEY);
+        const cacheKey = "cache:catalog:" + query.trim().toLowerCase();
+        const cached = await this.ctx.storage.get<{
+          expires: number;
+          drinks: unknown[];
+        }>(cacheKey);
+        if (cached && cached.expires > Date.now())
+          return json({ drinks: cached.drinks });
+        const response = await searchUSDADrinks(query, env.FDC_API_KEY);
+        if (response.ok) {
+          const result = (await response.clone().json()) as {
+            drinks: unknown[];
+          };
+          await this.ctx.storage.put(cacheKey, {
+            expires: Date.now() + 86400000,
+            drinks: result.drinks,
+          });
+          if ((await this.ctx.storage.getAlarm()) === null)
+            await this.ctx.storage.setAlarm(Date.now() + 86400000);
+        }
+        return response;
+      }
       return foodLookup(
         (body as { barcode?: unknown })?.barcode,
         env.FDC_API_KEY,
@@ -130,6 +157,7 @@ export default {
       ![
         "/drink-maker",
         "/food-lookup",
+        "/drink-catalog",
         "/parse-drinks",
         "/photo-drinks",
         "/access",
@@ -153,7 +181,8 @@ export default {
       return json(
         {
           code: "NOT_CONFIGURED",
-          message: "Goal mode is not configured yet. Lab works offline.",
+          message:
+            "Online services are not configured yet. Local drinks and Lab work offline.",
         },
         503,
       );

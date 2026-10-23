@@ -1,3 +1,5 @@
+import { callService } from "../drink-maker/client";
+import type { Drink } from "../lib/model";
 import { alcoholAllowed, isAlcohol } from "../features/alcohol";
 import { CompareDrinks } from "../components/compare-drinks";
 import { DrinkIcon } from "../components/drink-icon";
@@ -14,10 +16,13 @@ export default function Add() {
   const params = useLocalSearchParams<{ mode?: string }>();
   const [autoVoice, setAutoVoice] = useState(params.mode === "voice");
   const [tab, setTab] = useState<"Note" | "Drinks" | "More">("Note");
-  const { library, catalog, containers, saveEntry, settings } = useStore(),
+  const { library, catalog, containers, saveEntry, saveDrink, settings } =
+      useStore(),
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false),
-    [query, setQuery] = useState("");
+    [query, setQuery] = useState(""),
+    [usda, setUsda] = useState<Drink[]>([]),
+    [lookupBusy, setLookupBusy] = useState(false);
   const list = catalogDrinks(library, catalog).filter(
     (d) =>
       (!isAlcohol(d) || alcoholAllowed(settings)) &&
@@ -87,6 +92,55 @@ export default function Add() {
               onChangeText={setQuery}
               placeholder="Water, coffee, your recipes…"
             />
+          ) : null}
+          {tab === "Drinks" ? (
+            <View style={{ gap: 10 }}>
+              <Button
+                secondary
+                title="Search USDA catalog"
+                busy={lookupBusy}
+                disabled={query.trim().length < 2}
+                onPress={() => {
+                  setLookupBusy(true);
+                  setNotice("");
+                  setUsda([]);
+                  void callService<{ drinks: Drink[] }>("/drink-catalog", {
+                    query,
+                  })
+                    .then((result) => {
+                      const drinks = result.drinks.filter(
+                        (d) => !isAlcohol(d) || alcoholAllowed(settings),
+                      );
+                      setUsda(drinks);
+                      if (!drinks.length)
+                        setNotice(
+                          "No USDA drinks with measured liquid servings found. Try a brand name or enter the label.",
+                        );
+                    })
+                    .catch((e) => setNotice(e.message))
+                    .finally(() => setLookupBusy(false));
+                }}
+              />
+              {usda.map((drink) => (
+                <Row
+                  key={drink.id}
+                  title={drink.name}
+                  detail="USDA · review label before logging"
+                  onPress={() => {
+                    void saveDrink(drink)
+                      .then(() =>
+                        router.push({
+                          pathname: "/drink",
+                          params: { drink: drink.id },
+                        }),
+                      )
+                      .catch(() =>
+                        setNotice("Could not save this drink. Try again."),
+                      );
+                  }}
+                />
+              ))}
+            </View>
           ) : null}
           {tab === "More" ? (
             <>

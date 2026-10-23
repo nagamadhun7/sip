@@ -53,3 +53,59 @@ export async function foodLookup(barcode: unknown, key: string | undefined) {
     );
   }
 }
+export async function searchUSDADrinks(
+  query: unknown,
+  key: string | undefined,
+) {
+  if (typeof query !== "string" || query.trim().length < 2 || query.length > 80)
+    return json(
+      { message: "Enter a drink name from 2 to 80 characters." },
+      400,
+    );
+  if (!key)
+    return json(
+      {
+        code: "NOT_CONFIGURED",
+        message:
+          "USDA catalog search needs the publisher’s FoodData Central API key. Local drinks and manual entry still work.",
+      },
+      503,
+    );
+  try {
+    const url = "https://api.nal.usda.gov/fdc/v1/";
+    const response = await fetch(
+      url + "foods/search?api_key=" + encodeURIComponent(key),
+      {
+        method: "POST",
+        signal: AbortSignal.timeout(10000),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: query.trim(),
+          dataType: ["Branded"],
+          pageSize: 12,
+        }),
+      },
+    );
+    if (!response.ok) throw Error();
+    const body = (await response.json()) as { foods?: { fdcId: number }[] };
+    const { parseUSDACatalogFood } = await import("../../src/lib/usda.ts");
+    const results = await Promise.allSettled(
+      (body.foods ?? []).slice(0, 6).map(async (food) => {
+        const detail = await fetch(
+          url + "food/" + food.fdcId + "?api_key=" + encodeURIComponent(key),
+          { signal: AbortSignal.timeout(8000) },
+        );
+        return detail.ok ? parseUSDACatalogFood(await detail.json()) : null;
+      }),
+    );
+    const drinks = results.flatMap((result) =>
+      result.status === "fulfilled" && result.value ? [result.value] : [],
+    );
+    return json({ drinks });
+  } catch {
+    return json(
+      { message: "USDA catalog is unavailable. Retry or use local drinks." },
+      502,
+    );
+  }
+}

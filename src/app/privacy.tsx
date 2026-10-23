@@ -23,6 +23,11 @@ export default function Privacy() {
   }
   return (
     <Page>
+      <T>
+        USDA catalog search sends your product search phrase to USDA through our
+        server when requested. Bundled catalog drinks work offline. Your logs
+        and daily notes are not sent with catalog searches.
+      </T>
       <T size={25} bold>
         Your Sip data
       </T>
