@@ -27,9 +27,9 @@ export default function Privacy() {
         Your Sip data
       </T>
       <T>
-        Drink history, custom drinks and preferences are stored in a local
-        SQLite database. The free tracker does not require sign-in and does not
-        upload your drink history to a server.
+        Drink history, custom drinks, pinned favorites, daily notes and
+        preferences are stored in a local SQLite database. The free tracker does
+        not require sign-in and does not upload your drink history to a server.
       </T>
       <T size={20} bold>
         Barcode lookup
