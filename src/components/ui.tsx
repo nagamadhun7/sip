@@ -15,9 +15,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path, Rect, ClipPath, Defs } from "react-native-svg";
 import { router } from "expo-router";
 export const colors = {
-  ink: "#1F2A33",
+  ink: "#252525",
   muted: "#596875",
-  line: "rgba(31,42,51,0.08)",
+  line: "#EFEFEF",
   blue: "#6FAEE8",
   brown: "#A0724A",
   peach: "#F2A58A",
@@ -33,7 +33,8 @@ export function T({
     <Text
       style={[
         {
-          fontFamily: bold ? "Nunito_600SemiBold" : "Nunito_400Regular",
+          fontFamily: Platform.OS === "ios" ? "System" : "sans-serif",
+          fontWeight: bold ? "600" : "400",
           fontSize: size,
           flexShrink: 1,
           color: muted ? colors.muted : colors.ink,
@@ -110,7 +111,7 @@ export function Button({
         minHeight: 52,
         paddingVertical: 14,
         paddingHorizontal: 20,
-        borderRadius: 28,
+        borderRadius: 18,
         backgroundColor: secondary
           ? "#F3F5F6"
           : danger
@@ -237,7 +238,7 @@ export function Input({
         maxLength={maxLength}
         textAlignVertical={multiline ? "top" : "center"}
         style={{
-          fontFamily: "Nunito_400Regular",
+          fontFamily: Platform.OS === "ios" ? "System" : "sans-serif",
           fontSize: 18,
           color: colors.ink,
           paddingVertical: 12,
@@ -342,11 +343,12 @@ export function Icon({
   color = colors.ink,
   size = 24,
 }: {
-  name: "plus" | "drop" | "chart" | "settings" | "camera" | "back";
+  name: "plus" | "drop" | "chart" | "settings" | "camera" | "back" | "mic";
   color?: string;
   size?: number;
 }) {
   const paths = {
+    mic: "M9 5a3 3 0 0 1 6 0v7a3 3 0 0 1-6 0zM6 10v2a6 6 0 0 0 12 0v-2M12 18v4M9 22h6",
     plus: "M12 5v14M5 12h14",
     drop: "M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z",
     chart: "M5 20V10M12 20V4M19 20v-7",
@@ -373,61 +375,62 @@ export function TabBar({ active }: { active: "today" | "week" }) {
   return (
     <View
       style={{
+        backgroundColor: "white",
         flexDirection: "row",
         alignItems: "center",
-        justifyContent: "space-around",
-        paddingBottom: Math.max(safe.bottom, 14),
+        justifyContent: "space-between",
+        paddingHorizontal: 24,
         paddingTop: 10,
-        borderTopWidth: 1,
-        borderColor: colors.line,
-        backgroundColor: "white",
+        paddingBottom: Math.max(safe.bottom, 16),
       }}
     >
-      <Pressable
-        accessibilityRole="tab"
-        accessibilityState={{ selected: active === "today" }}
-        onPress={() => router.replace("/")}
-        style={{ alignItems: "center", gap: 4, paddingHorizontal: 22 }}
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 4,
+          backgroundColor: "#F7F7F7",
+          borderRadius: 28,
+          padding: 3,
+        }}
       >
-        <Icon
-          name="drop"
-          color={active === "today" ? colors.ink : colors.muted}
-        />
-        <T size={12} muted={active !== "today"}>
-          Today
-        </T>
+        <Pressable
+          accessibilityLabel="Add a drink"
+          onPress={() => router.push("/add")}
+          style={{ padding: 11 }}
+        >
+          <Icon name="plus" size={23} />
+        </Pressable>
+        <Pressable
+          accessibilityLabel={active === "today" ? "View week" : "View today"}
+          onPress={() => router.replace(active === "today" ? "/week" : "/")}
+          style={{ padding: 11 }}
+        >
+          <Icon name={active === "today" ? "chart" : "drop"} size={21} />
+        </Pressable>
+      </View>
+      <Pressable
+        accessibilityLabel="Scan barcode"
+        onPress={() => router.push("/scan")}
+        style={{ padding: 12 }}
+      >
+        <Icon name="camera" size={23} />
       </Pressable>
       <Pressable
-        accessibilityLabel="Add a drink"
-        accessibilityRole="button"
-        onPress={() => router.push("/add")}
+        accessibilityLabel="Voice log"
+        onPress={() =>
+          router.push({ pathname: "/add", params: { mode: "voice" } })
+        }
         style={{
-          width: 60,
-          height: 60,
-          borderRadius: 30,
+          width: 62,
+          height: 62,
+          borderRadius: 31,
           backgroundColor: colors.blue,
           alignItems: "center",
           justifyContent: "center",
-          marginTop: -26,
-          borderWidth: 4,
-          borderColor: "white",
         }}
       >
-        <Icon name="plus" size={28} color="#103B62" />
-      </Pressable>
-      <Pressable
-        accessibilityRole="tab"
-        accessibilityState={{ selected: active === "week" }}
-        onPress={() => router.replace("/week")}
-        style={{ alignItems: "center", gap: 4, paddingHorizontal: 22 }}
-      >
-        <Icon
-          name="chart"
-          color={active === "week" ? colors.ink : colors.muted}
-        />
-        <T size={12} muted={active !== "week"}>
-          Week
-        </T>
+        <Icon name="mic" color="#103B62" size={27} />
       </Pressable>
     </View>
   );

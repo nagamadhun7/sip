@@ -3,13 +3,16 @@ import { CompareDrinks } from "../components/compare-drinks";
 import { DrinkIcon } from "../components/drink-icon";
 import React, { useState } from "react";
 import { View, FlatList } from "react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
+import { AccessiblePressable as Pressable } from "../components/accessible-pressable";
 import { useStore } from "../state/store";
 import { id, formatVolume } from "../lib/model";
 import { T, Input, Row, Button } from "../components/ui";
 import { catalogDrinks } from "../lib/tracking";
 import { LogInput } from "../components/log-input";
 export default function Add() {
+  const params = useLocalSearchParams<{ mode?: string }>();
+  const [tab, setTab] = useState<"Note" | "Drinks" | "More">("Note");
   const { library, catalog, containers, saveEntry, settings } = useStore(),
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false),
@@ -24,96 +27,142 @@ export default function Add() {
       keyboardShouldPersistTaps="handled"
       contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={{ padding: 24, paddingBottom: 40 }}
-      data={list}
+      style={{ backgroundColor: "white" }}
+      data={tab === "Drinks" ? list : []}
       keyExtractor={(d) => d.id}
       ListHeaderComponent={
         <View style={{ gap: 20, marginBottom: 20 }}>
-          <T size={28} bold>
-            What did you drink?
-          </T>
-          <LogInput />
-          <CompareDrinks />
-          <Button
-            secondary
-            title="Photograph a drink"
-            onPress={() =>
-              router.push({ pathname: "/scan", params: { recognize: "1" } })
-            }
-          />
-          <Input
-            label="Search drinks"
-            value={query}
-            onChangeText={setQuery}
-            placeholder="Water, coffee, your recipes…"
-          />
-          <View style={{ flexDirection: "row", gap: 12 }}>
-            <View style={{ flex: 1 }}>
+          <View style={{ flexDirection: "row", gap: 24, marginBottom: 6 }}>
+            {(["Note", "Drinks", "More"] as const).map((label) => (
+              <Pressable
+                key={label}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: tab === label }}
+                onPress={() => setTab(label)}
+                style={{
+                  paddingVertical: 12,
+                  borderBottomWidth: tab === label ? 2 : 0,
+                  borderColor: "#252525",
+                }}
+              >
+                <T size={18} bold={tab === label} muted={tab !== label}>
+                  {label}
+                </T>
+              </Pressable>
+            ))}
+          </View>
+          {tab === "Note" ? (
+            <>
+              <T size={28} bold>
+                What did you drink?
+              </T>
+              {params.mode === "voice" ? (
+                <T muted>
+                  Tap Voice log to speak, then check your drinks before saving.
+                </T>
+              ) : null}
+              <LogInput />
+            </>
+          ) : null}
+          {tab === "More" ? (
+            <>
+              <CompareDrinks />
               <Button
                 secondary
-                title="Scan barcode"
-                onPress={() => router.push("/scan")}
-              />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Button
-                secondary
-                title="Custom drink"
+                title="Photograph a drink"
                 onPress={() =>
-                  router.push({ pathname: "/drink", params: { custom: "1" } })
+                  router.push({ pathname: "/scan", params: { recognize: "1" } })
                 }
               />
-            </View>
-          </View>
-          <Row
-            title="Drink maker"
-            detail="Goal or Lab"
-            onPress={() => router.push("/drink-maker")}
-          />
-          <Row
-            title="My drinks"
-            detail="Saved drinks and recipes"
-            onPress={() => router.push("/my-drinks")}
-          />
-          {notice ? <T>{notice}</T> : null}
-          {containers.map((c) => (
-            <Row
-              key={c.id}
-              title={c.name}
-              leading={<DrinkIcon type="my-bottle" size={28} />}
-              detail={formatVolume(c.ml, settings.units)}
-              onPress={
-                busy
-                  ? undefined
-                  : async () => {
-                      setBusy(true);
-                      try {
-                        const drink = [...library, ...catalog].find(
-                          (d) => d.id === c.drink_id,
-                        );
-                        if (!drink)
-                          throw Error(
-                            "This container needs its drink selected again.",
-                          );
-                        await saveEntry({
-                          id: id(),
-                          drink,
-                          ml: c.ml,
-                          at: new Date().toISOString(),
-                        });
-                        setNotice(`${c.name} logged.`);
-                      } catch (e) {
-                        setNotice((e as Error).message);
-                      } finally {
-                        setBusy(false);
-                      }
-                    }
-              }
+            </>
+          ) : null}
+          {tab === "Drinks" ? (
+            <Input
+              label="Search drinks"
+              value={query}
+              onChangeText={setQuery}
+              placeholder="Water, coffee, your recipes…"
             />
-          ))}
-          {library.length ? (
-            <T size={13} muted>
-              Your saved drinks and everyday drinks
-            </T>
+          ) : null}
+          {tab === "More" ? (
+            <>
+              <View style={{ flexDirection: "row", gap: 12 }}>
+                <View style={{ flex: 1 }}>
+                  <Button
+                    secondary
+                    title="Scan barcode"
+                    onPress={() => router.push("/scan")}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Button
+                    secondary
+                    title="Custom drink"
+                    onPress={() =>
+                      router.push({
+                        pathname: "/drink",
+                        params: { custom: "1" },
+                      })
+                    }
+                  />
+                </View>
+              </View>
+              <Row
+                title="Drink maker"
+                detail="Goal or Lab"
+                onPress={() => router.push("/drink-maker")}
+              />
+              <Row
+                title="My drinks"
+                detail="Saved drinks and recipes"
+                onPress={() => router.push("/my-drinks")}
+              />
+            </>
+          ) : null}
+          {notice ? <T>{notice}</T> : null}
+          {tab === "Drinks" ? (
+            <>
+              {containers.map((c) => (
+                <Row
+                  key={c.id}
+                  title={c.name}
+                  leading={<DrinkIcon type="my-bottle" size={28} />}
+                  detail={formatVolume(c.ml, settings.units)}
+                  onPress={
+                    busy
+                      ? undefined
+                      : async () => {
+                          setBusy(true);
+                          try {
+                            const drink = [...library, ...catalog].find(
+                              (d) => d.id === c.drink_id,
+                            );
+                            if (!drink)
+                              throw Error(
+                                "This container needs its drink selected again.",
+                              );
+                            await saveEntry({
+                              id: id(),
+                              drink,
+                              ml: c.ml,
+                              at: new Date().toISOString(),
+                            });
+                            setNotice(`${c.name} logged.`);
+                          } catch (e) {
+                            setNotice((e as Error).message);
+                          } finally {
+                            setBusy(false);
+                          }
+                        }
+                  }
+                />
+              ))}
+              {library.length ? (
+                <T size={13} muted>
+                  Your saved drinks and everyday drinks
+                </T>
+              ) : null}
+            </>
           ) : null}
         </View>
       }
@@ -154,18 +203,20 @@ export default function Add() {
         </View>
       )}
       ListEmptyComponent={
-        <View style={{ gap: 16, paddingTop: 24 }}>
-          <T>No drinks match “{query}”.</T>
-          <Button
-            title="Create this drink"
-            onPress={() =>
-              router.push({
-                pathname: "/drink",
-                params: { custom: "1", name: query },
-              })
-            }
-          />
-        </View>
+        tab === "Drinks" ? (
+          <View style={{ gap: 16, paddingTop: 24 }}>
+            <T>No drinks match “{query}”.</T>
+            <Button
+              title="Create this drink"
+              onPress={() =>
+                router.push({
+                  pathname: "/drink",
+                  params: { custom: "1", name: query },
+                })
+              }
+            />
+          </View>
+        ) : undefined
       }
     />
   );

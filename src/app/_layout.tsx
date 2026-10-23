@@ -40,7 +40,7 @@ export default function Layout() {
             contentStyle: { backgroundColor: "white" },
             headerShadowVisible: false,
             headerTitleStyle: {
-              fontFamily: "Nunito_600SemiBold",
+              fontWeight: "600",
               color: "#1F2A33",
             },
             headerTintColor: "#596875",
@@ -55,7 +55,18 @@ export default function Layout() {
           />
           <Stack.Screen
             name="add"
-            options={{ title: "Add a drink", presentation: "modal",headerRight:()=> <Pressable accessibilityLabel="Close Add a drink" onPress={()=>router.back()}><T>Close</T></Pressable> }}
+            options={{
+              title: "Add a drink",
+              presentation: "modal",
+              headerRight: () => (
+                <Pressable
+                  accessibilityLabel="Close Add a drink"
+                  onPress={() => router.back()}
+                >
+                  <T>Close</T>
+                </Pressable>
+              ),
+            }}
           />
           <Stack.Screen
             name="drink-maker"

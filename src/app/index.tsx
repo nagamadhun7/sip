@@ -1,4 +1,3 @@
-import { regionalOunce } from "../features/locale";
 import { AccessiblePressable as Pressable } from "../components/accessible-pressable";
 import { AlcoholControls } from "../components/alcohol-controls";
 import { caffeineLimit } from "../features/cutback";
@@ -12,17 +11,7 @@ import { useStore } from "../state/store";
 import { localDay, onDay, totals, formatVolume, id } from "../lib/model";
 import { quickHistory } from "../lib/tracking";
 import { useToday } from "../lib/use-today";
-import {
-  T,
-  Glass,
-  Bar,
-  Row,
-  Icon,
-  TabBar,
-  colors,
-  ErrorText,
-  Button,
-} from "../components/ui";
+import { T, Row, Icon, TabBar, ErrorText, Button } from "../components/ui";
 export default function Today() {
   const {
       entries,
@@ -98,10 +87,36 @@ export default function Today() {
       setPending(false);
     }
   };
+  const grouped = Array.from(
+    today
+      .reduce((map, entry) => {
+        const key = entry.drink.id;
+        const previous = map.get(key);
+        map.set(key, {
+          drink: entry.drink,
+          ml: (previous?.ml ?? 0) + entry.ml,
+        });
+        return map;
+      }, new Map<string, { drink: (typeof today)[number]["drink"]; ml: number }>())
+      .values(),
+  ).sort((a, b) => b.ml - a.ml);
+  const maxVolume = Math.max(1, ...grouped.map((g) => g.ml));
+  const focus = settings.focus;
+  const totalText =
+    focus === "water"
+      ? formatVolume(sum.water, settings.units)
+      : `${Math.round(sum[focus])} ${focus === "sugar" ? "g" : "mg"}`;
+  const remaining = Math.max(0, settings[focus] - sum[focus]);
   return (
     <View style={{ flex: 1, backgroundColor: "white", paddingTop: safe.top }}>
       <ScrollView
-        contentContainerStyle={{ padding: 24, paddingBottom: 40, gap: 22 }}
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={{
+          paddingHorizontal: 24,
+          paddingTop: 10,
+          paddingBottom: 24,
+          gap: 24,
+        }}
       >
         <View
           style={{
@@ -110,129 +125,247 @@ export default function Today() {
             justifyContent: "space-between",
           }}
         >
-          <T size={34} bold>
-            Today
-          </T>
           <Pressable
-            accessibilityLabel="Settings"
-            onPress={() => router.push("/settings")}
-            style={{ padding: 10 }}
-          >
-            <Icon name="settings" />
-          </Pressable>
-        </View>
-        {settings.focus === "water" ? (
-          <Pressable
-            accessibilityLabel={`Hydration balance, ${formatVolume(sum.water, settings.units)} of ${formatVolume(settings.water, settings.units)}`}
-            onPress={() => router.push("/balance")}
+            onPress={() => router.push("/week")}
             style={{
-              flexDirection: fontScale > 1.3 ? "column" : "row",
-              alignItems: fontScale > 1.3 ? "flex-start" : "center",
-              gap: 28,
-              paddingVertical: 6,
-              paddingLeft: 14,
+              borderRadius: 24,
+              backgroundColor: "#F7F7F7",
+              paddingHorizontal: 16,
+              paddingVertical: 9,
+              flexDirection: "row",
+              gap: 10,
+              alignItems: "center",
             }}
           >
-            <Glass fraction={sum.water / settings.water} />
-            <View>
-              <T size={58} bold>
-                {settings.units === "ml"
-                  ? (sum.water / 1000).toFixed(1)
-                  : (
-                      sum.water / regionalOunce(settings.locale ?? "en-US")
-                    ).toFixed(0)}
-                <T size={19} muted>
-                  {" "}
-                  {settings.units === "ml" ? "L" : "fl oz"}
-                </T>
-              </T>
-              <T muted>
-                {sum.water >= settings.water
-                  ? "Daily target reached"
-                  : `${formatVolume(settings.water - sum.water, settings.units)} to go`}
-              </T>
-            </View>
+            <T bold>Today</T>
+            <T muted>⌄</T>
           </Pressable>
-        ) : (
-          <Pressable
-            onPress={() =>
-              router.push(
-                settings.focus === "caffeine" ? "/caffeine" : "/balance",
-              )
-            }
-          >
-            <T muted>Focus: {settings.focus}</T>
-            <T size={60} bold>
-              {Math.round(sum[settings.focus])}
-              <T size={18} muted>
-                {" "}
-                {settings.focus === "sugar" ? "g" : "mg"}
-              </T>
-            </T>
-            <T muted>
-              of your {settings[settings.focus]}{" "}
-              {settings.focus === "sugar" ? "g" : "mg"} limit
-            </T>
-            <Bar
-              value={
-                settings[settings.focus] > 0
-                  ? sum[settings.focus] / settings[settings.focus]
-                  : sum[settings.focus] > 0
-                    ? 1
-                    : 0
-              }
-              color={settings.focus === "sugar" ? colors.peach : colors.brown}
-            />
-          </Pressable>
-        )}
-        <View
-          style={{ flexDirection: fontScale > 1.3 ? "column" : "row", gap: 12 }}
-        >
-          {quicks.map((previous, idx) => (
+          <View style={{ flexDirection: "row", gap: 8 }}>
             <Pressable
-              key={idx}
-              accessibilityRole="button"
-              disabled={pending}
-              onPress={() => quick(idx)}
+              accessibilityLabel="My drinks"
+              onPress={() => router.push("/my-drinks")}
+              style={{ padding: 10 }}
+            >
+              <Icon name="drop" size={21} />
+            </Pressable>
+            <Pressable
+              accessibilityLabel="Settings"
+              onPress={() => router.push("/settings")}
+              style={{ padding: 10 }}
+            >
+              <Icon name="settings" size={21} />
+            </Pressable>
+          </View>
+        </View>
+        <Pressable
+          accessibilityLabel={`${focus}: ${totalText}. Open balance`}
+          onPress={() =>
+            router.push(focus === "caffeine" ? "/caffeine" : "/balance")
+          }
+          style={{ alignItems: "center", gap: 7, paddingTop: 12 }}
+        >
+          <T size={13} muted>
+            {focus === "water"
+              ? "Fluid intake today"
+              : `${focus[0].toUpperCase() + focus.slice(1)} today`}
+          </T>
+          <T
+            size={fontScale > 1.3 ? 44 : 56}
+            bold
+            style={{
+              letterSpacing: -2,
+              fontVariant: ["tabular-nums"],
+              textAlign: "center",
+            }}
+          >
+            {totalText}
+          </T>
+          <View
+            style={{
+              flexDirection: "row",
+              flexWrap: "wrap",
+              justifyContent: "center",
+              gap: 8,
+            }}
+          >
+            <View
               style={{
-                flex: 1,
-                alignItems: "center",
-                paddingVertical: 12,
-                gap: 4,
+                backgroundColor: "#F7F7F7",
+                borderRadius: 20,
+                paddingHorizontal: 13,
+                paddingVertical: 7,
               }}
             >
-              <View
-                style={{ flexDirection: "row", gap: 6, alignItems: "center" }}
-              >
-                <DrinkIcon drink={previous.drink} size={28} />
-                <T>{previous.drink.name}</T>
-              </View>
-              <T size={13} muted>
-                {formatVolume(previous.ml, settings.units)}
+              <T size={12}>
+                {focus === "water"
+                  ? formatVolume(remaining, settings.units)
+                  : `${Math.round(remaining)} ${focus === "sugar" ? "g" : "mg"}`}{" "}
+                {focus === "water" ? "to go" : "left"}
               </T>
-            </Pressable>
-          ))}
-          <Pressable
-            accessibilityRole="button"
-            disabled={pending}
-            onPress={() => void repeatYesterday()}
-            style={{
-              flex: 1,
-              paddingVertical: 12,
-              alignItems: "center",
-              gap: 4,
+            </View>
+            <View
+              style={{
+                backgroundColor: "#F7F7F7",
+                borderRadius: 20,
+                paddingHorizontal: 13,
+                paddingVertical: 7,
+              }}
+            >
+              <T size={12}>
+                {focus === "water"
+                  ? formatVolume(settings.water, settings.units)
+                  : `${settings[focus]} ${focus === "sugar" ? "g" : "mg"}`}{" "}
+                {focus === "water" ? "goal" : "limit"}
+              </T>
+            </View>
+          </View>
+        </Pressable>
+        {grouped.length ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{
+              gap: 12,
+              alignItems: "flex-end",
+              paddingTop: 10,
             }}
           >
-            <T>Same as</T>
-            <T size={13} muted>
-              yesterday
+            {grouped.map((g, i) => (
+              <Pressable
+                key={g.drink.id}
+                accessibilityLabel={`${g.drink.name}, ${formatVolume(g.ml, settings.units)} today. Edit drink`}
+                onPress={() =>
+                  router.push({
+                    pathname: "/drink",
+                    params: { drink: g.drink.id },
+                  })
+                }
+                style={{
+                  width: Math.max(74, fontScale > 1.3 ? 100 : 74),
+                  height: 240,
+                  justifyContent: "flex-end",
+                }}
+              >
+                <View
+                  style={{
+                    height: (g.ml / maxVolume) * 235,
+                    position: "absolute",
+                    bottom: 0,
+                    width: "100%",
+                    borderRadius: 20,
+                    backgroundColor: [
+                      "#F8EBCB",
+                      "#F3D4DF",
+                      "#F8DDB7",
+                      "#DCE8E5",
+                    ][i % 4],
+                    paddingHorizontal: 7,
+                    paddingVertical: 0,
+                    justifyContent: "flex-end",
+                    alignItems: "center",
+                    gap: 5,
+                  }}
+                ></View>
+                <View
+                  style={{
+                    alignItems: "center",
+                    gap: 4,
+                    paddingTop: 9,
+                    minHeight: 70,
+                    paddingBottom: 15,
+                  }}
+                >
+                  <DrinkIcon drink={g.drink} size={26} />
+                  <T size={12} bold style={{ textAlign: "center" }}>
+                    {formatVolume(g.ml, settings.units)}
+                  </T>
+                  <T size={11} style={{ textAlign: "center" }}>
+                    {g.drink.name}
+                  </T>
+                </View>
+              </Pressable>
+            ))}
+          </ScrollView>
+        ) : (
+          <View style={{ paddingVertical: 36, alignItems: "center", gap: 10 }}>
+            <T size={22} bold>
+              Add your first drink
             </T>
-          </Pressable>
+            <T muted style={{ textAlign: "center" }}>
+              Your drinks and daily totals will appear here.
+            </T>
+            <Button title="Add a drink" onPress={() => router.push("/add")} />
+          </View>
+        )}
+        <View
+          style={{ flexDirection: fontScale > 1.3 ? "column" : "row", gap: 18 }}
+        >
+          {(["caffeine", "sugar", "calories"] as const).map((k) => (
+            <Pressable
+              key={k}
+              onPress={() =>
+                router.push(k === "caffeine" ? "/caffeine" : "/balance")
+              }
+              style={{ flex: 1, gap: 5 }}
+            >
+              <T size={12} muted>
+                {k[0].toUpperCase() + k.slice(1)}
+              </T>
+              <T size={20} bold>
+                {Math.round(sum[k])}{" "}
+                <T size={12} muted>
+                  {k === "sugar" ? "g" : k === "calories" ? "kcal" : "mg"}
+                </T>
+              </T>
+              {sum.missing[k] > 0 ? (
+                <T size={11} muted>
+                  {sum.missing[k]} missing data
+                </T>
+              ) : null}
+            </Pressable>
+          ))}
+        </View>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <T size={13} muted>
+            {new Date().toLocaleDateString(settings.locale ?? "en-US", {
+              month: "short",
+              day: "numeric",
+            })}
+          </T>
+          <T size={13} muted>
+            {today.length} {today.length === 1 ? "drink" : "drinks"}
+          </T>
+        </View>
+        <View>
+          <AlcoholControls summary />
+          {today.map((e) => (
+            <Row
+              key={e.id}
+              title={e.drink.name}
+              detail={new Date(e.at).toLocaleTimeString([], {
+                hour: "numeric",
+                minute: "2-digit",
+              })}
+              value={formatVolume(e.ml, settings.units)}
+              dot={e.drink.color}
+              onPress={() =>
+                router.push({ pathname: "/drink", params: { entry: e.id } })
+              }
+            />
+          ))}
         </View>
         <ErrorText error={error} />
         {undoLabel ? (
           <View style={{ gap: 8 }}>
-            <T muted>{undoLabel}</T>
+            <T size={12} muted>
+              {undoLabel}
+            </T>
             <Button
               secondary
               title="Undo last change"
@@ -242,87 +375,48 @@ export default function Today() {
             />
           </View>
         ) : null}
+        <T size={13} muted>
+          Quick add from your history
+        </T>
         <View
-          style={{ flexDirection: fontScale > 1.3 ? "column" : "row", gap: 24 }}
+          style={{
+            flexDirection: fontScale > 1.3 ? "column" : "row",
+            flexWrap: "wrap",
+            gap: 10,
+          }}
         >
-          {(["caffeine", "sugar", "calories"] as const).map((k) => (
+          {quicks.map((previous, idx) => (
             <Pressable
-              key={k}
-              onPress={() =>
-                router.push(k === "caffeine" ? "/caffeine" : "/balance")
-              }
-              style={{ flex: 1 }}
+              key={idx}
+              disabled={pending}
+              onPress={() => void quick(idx)}
+              style={{
+                backgroundColor: "#F7F7F7",
+                borderRadius: 22,
+                padding: 12,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 8,
+              }}
             >
-              <T size={13} muted>
-                {k === "sugar"
-                  ? "Sugar"
-                  : k === "calories"
-                    ? "Calories"
-                    : "Caffeine"}
+              <DrinkIcon drink={previous.drink} size={24} />
+              <T size={13}>
+                {previous.drink.name} ·{" "}
+                {formatVolume(previous.ml, settings.units)}
               </T>
-              <T size={28} bold>
-                {Math.round(sum[k])}
-                <T size={14} muted>
-                  {" "}
-                  {k === "sugar" ? "g" : k === "calories" ? "kcal" : "mg"}
-                </T>
-              </T>
-              {k !== "calories" ? (
-                <Bar
-                  value={
-                    settings[k] > 0 ? sum[k] / settings[k] : sum[k] > 0 ? 1 : 0
-                  }
-                  color={k === "sugar" ? colors.peach : colors.brown}
-                />
-              ) : null}
-              {sum.missing[k] > 0 ? (
-                <T size={11} muted>
-                  {sum.missing[k]} drink(s) missing data
-                </T>
-              ) : null}
             </Pressable>
           ))}
+          <Pressable
+            disabled={pending}
+            onPress={() => void repeatYesterday()}
+            style={{ padding: 12 }}
+          >
+            <T size={13}>Same as yesterday</T>
+          </Pressable>
         </View>
-        {!today.length ? (
-          <View style={{ paddingVertical: 24, gap: 12 }}>
-            <T size={24} bold>
-              Add your first drink
-            </T>
-            <T muted>
-              Tap the plus or scan a drink. Your recent drinks appear here after
-              you log.
-            </T>
-            <Button title="Add a drink" onPress={() => router.push("/add")} />
-          </View>
-        ) : (
-          <View>
-            <AlcoholControls summary />
-            {today.map((e) => (
-              <Row
-                key={e.id}
-                title={e.drink.name}
-                detail={new Date(e.at).toLocaleTimeString([], {
-                  hour: "numeric",
-                  minute: "2-digit",
-                })}
-                value={formatVolume(e.ml, settings.units)}
-                dot={e.drink.color}
-                onPress={() =>
-                  router.push({ pathname: "/drink", params: { entry: e.id } })
-                }
-              />
-            ))}
-          </View>
-        )}
-        <Pressable onPress={() => router.push("/balance")}>
-          <T size={14} muted>
-            View your daily balance ›
-          </T>
-        </Pressable>
       </ScrollView>
       <TabBar active="today" />
     </View>
   );
 }
-
 export { ErrorBoundary } from "../components/route-error";

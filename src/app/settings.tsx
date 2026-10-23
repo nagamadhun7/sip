@@ -3,7 +3,8 @@ import { AlcoholControls } from "../components/alcohol-controls";
 import { CutbackControls } from "../components/cutback-controls";
 import { SituationControls } from "../components/situation-controls";
 import React, { useState } from "react";
-import { Linking } from "react-native";
+import { Linking, View } from "react-native";
+import { AccessiblePressable as Pressable } from "../components/accessible-pressable";
 import { Host, Switch } from "@expo/ui";
 import { router } from "expo-router";
 import { useStore } from "../state/store";
@@ -12,6 +13,37 @@ import { shareCsv } from "../lib/export";
 import { setReminders } from "../lib/reminders";
 import { Page, T, Row, Button, ErrorText, Input } from "../components/ui";
 import { defaultReminderPreferences } from "../lib/reminder-plan";
+function SettingsSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <View>
+      <Pressable
+        accessibilityState={{ expanded }}
+        onPress={() => setExpanded(!expanded)}
+        style={{
+          paddingVertical: 17,
+          borderBottomWidth: 1,
+          borderColor: "#EFEFEF",
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <T>{title}</T>
+        <T muted>{expanded ? "−" : "+"}</T>
+      </Pressable>
+      {expanded ? (
+        <View style={{ paddingVertical: 18 }}>{children}</View>
+      ) : null}
+    </View>
+  );
+}
 export default function SettingsScreen() {
   const store = useStore(),
     [error, setError] = useState(""),
@@ -68,10 +100,20 @@ export default function SettingsScreen() {
   }
   return (
     <Page>
-      <LanguageControls />
-      <SituationControls />
-      <CutbackControls />
-      <AlcoholControls />
+      <SettingsSection title="Language and region">
+        <LanguageControls />
+      </SettingsSection>
+      <SettingsSection title="Situation mode">
+        <SituationControls />
+      </SettingsSection>
+      <SettingsSection title="Caffeine cut-back">
+        <CutbackControls />
+      </SettingsSection>
+      {(store.settings.profile?.age ?? 0) >= 18 ? (
+        <SettingsSection title="Alcohol pacing">
+          <AlcoholControls />
+        </SettingsSection>
+      ) : null}
       <Row
         title="Your profile"
         detail="Age, weight, sex and status"

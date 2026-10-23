@@ -18,7 +18,15 @@ export default function Week() {
   const days = lastDays(7, end),
     daily = days.map((d) => totals(onDay(entries, d))),
     max = Math.max(settings.water, ...daily.map((d) => d.water));
-  const targetFor=(key:"water"|"caffeine"|"sugar"|"sodium"|"potassium",day:string)=>key==="water"?situationTarget(settings,day):key==="caffeine"?caffeineLimit(settings,entries,day):settings[key];
+  const targetFor = (
+    key: "water" | "caffeine" | "sugar" | "sodium" | "potassium",
+    day: string,
+  ) =>
+    key === "water"
+      ? situationTarget(settings, day)
+      : key === "caffeine"
+        ? caffeineLimit(settings, entries, day)
+        : settings[key];
   function changeWeek(next: number) {
     setOffset(next);
     const endDate = new Date();
@@ -107,8 +115,8 @@ export default function Week() {
                 style={{
                   width: "100%",
                   height: Math.max(3, (daily[index].water / max) * 135),
-                  backgroundColor: day === selected ? "#448AC7" : colors.blue,
-                  borderRadius: 5,
+                  backgroundColor: day === selected ? "#9CC7EB" : "#DEEAF3",
+                  borderRadius: 16,
                 }}
               />
               <T size={12} muted>
@@ -158,8 +166,8 @@ export default function Week() {
                       onDay(entries, days[i]).length > 0 &&
                       (k === "water" || d.missing[k] === 0) &&
                       (k === "water" || k === "potassium"
-                        ? d[k] >= targetFor(k,days[i])
-                        : d[k] <= targetFor(k,days[i])),
+                        ? d[k] >= targetFor(k, days[i])
+                        : d[k] <= targetFor(k, days[i])),
                   ).length
                 }{" "}
                 of 7 days recorded{" "}
