@@ -1,4 +1,4 @@
-import { dailyLimitNotices } from "../features/daily-limits";
+import { WaterHeadline, HomeDrinkGoals } from "../components/home-drink-goals";
 import { alcoholAllowed, isAlcohol } from "../features/alcohol";
 import { pinnedDrinks } from "../features/history";
 import { AccessiblePressable as Pressable } from "../components/accessible-pressable";
@@ -11,7 +11,7 @@ import { View, ScrollView, useWindowDimensions } from "react-native";
 import { Redirect, router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStore } from "../state/store";
-import { localDay, onDay, totals, formatVolume, id } from "../lib/model";
+import { localDay, onDay, formatVolume, id } from "../lib/model";
 import { quickHistory } from "../lib/tracking";
 import { useToday } from "../lib/use-today";
 import { T, Row, Icon, TabBar, ErrorText, Button } from "../components/ui";
@@ -52,9 +52,8 @@ export default function Today() {
   ];
   if (!settings.onboarded) return <Redirect href="/onboarding" />;
   const today = onDay(entries, day).sort(
-      (a, b) => Date.parse(b.at) - Date.parse(a.at),
-    ),
-    sum = totals(today);
+    (a, b) => Date.parse(b.at) - Date.parse(a.at),
+  );
   const quick = async (index: number) => {
     if (lock.current) return;
     lock.current = true;
@@ -106,26 +105,6 @@ export default function Today() {
       setPending(false);
     }
   };
-  const grouped = Array.from(
-    today
-      .reduce((map, entry) => {
-        const key = entry.drink.id;
-        const previous = map.get(key);
-        map.set(key, {
-          drink: entry.drink,
-          ml: (previous?.ml ?? 0) + entry.ml,
-        });
-        return map;
-      }, new Map<string, { drink: (typeof today)[number]["drink"]; ml: number }>())
-      .values(),
-  ).sort((a, b) => b.ml - a.ml);
-  const maxVolume = Math.max(1, ...grouped.map((g) => g.ml));
-  const focus = settings.focus;
-  const totalText =
-    focus === "water"
-      ? formatVolume(sum.water, settings.units)
-      : `${Math.round(sum[focus])} ${focus === "sugar" ? "g" : "mg"}`;
-  const remaining = Math.max(0, settings[focus] - sum[focus]);
   return (
     <View style={{ flex: 1, backgroundColor: "white", paddingTop: safe.top }}>
       <ScrollView
@@ -177,203 +156,8 @@ export default function Today() {
           </View>
         </View>
 
-        <Pressable
-          accessibilityLabel={`${focus}: ${totalText}. Open balance`}
-          onPress={() =>
-            router.push(focus === "caffeine" ? "/caffeine" : "/balance")
-          }
-          style={{ alignItems: "center", gap: 7, paddingTop: 12 }}
-        >
-          <T size={13} muted>
-            {focus === "water"
-              ? "Fluid intake today"
-              : `${focus[0].toUpperCase() + focus.slice(1)} today`}
-          </T>
-          <T
-            size={fontScale > 1.3 ? 44 : 56}
-            bold
-            style={{
-              letterSpacing: -2,
-              fontVariant: ["tabular-nums"],
-              textAlign: "center",
-            }}
-          >
-            {totalText}
-          </T>
-          <View
-            style={{
-              flexDirection: "row",
-              flexWrap: "wrap",
-              justifyContent: "center",
-              gap: 8,
-            }}
-          >
-            <View
-              style={{
-                backgroundColor: "#F7F7F7",
-                borderRadius: 20,
-                paddingHorizontal: 13,
-                paddingVertical: 7,
-              }}
-            >
-              <T size={12}>
-                {focus === "water"
-                  ? formatVolume(remaining, settings.units)
-                  : `${Math.round(remaining)} ${focus === "sugar" ? "g" : "mg"}`}{" "}
-                {focus === "water" ? "to go" : "left"}
-              </T>
-            </View>
-            <View
-              style={{
-                backgroundColor: "#F7F7F7",
-                borderRadius: 20,
-                paddingHorizontal: 13,
-                paddingVertical: 7,
-              }}
-            >
-              <T size={12}>
-                {focus === "water"
-                  ? formatVolume(settings.water, settings.units)
-                  : `${settings[focus]} ${focus === "sugar" ? "g" : "mg"}`}{" "}
-                {focus === "water" ? "goal" : "limit"}
-              </T>
-            </View>
-          </View>
-        </Pressable>
-        {grouped.length ? (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{
-              gap: 12,
-              alignItems: "flex-end",
-              paddingTop: 10,
-            }}
-          >
-            {grouped.map((g, i) => (
-              <Pressable
-                key={g.drink.id}
-                accessibilityLabel={`${g.drink.name}, ${formatVolume(g.ml, settings.units)} today. Edit drink`}
-                onPress={() =>
-                  router.push({
-                    pathname: "/drink",
-                    params: { drink: g.drink.id },
-                  })
-                }
-                style={{
-                  width: Math.max(74, fontScale > 1.3 ? 100 : 74),
-                  height: 240,
-                  justifyContent: "flex-end",
-                }}
-              >
-                <View
-                  style={{
-                    height: (g.ml / maxVolume) * 235,
-                    position: "absolute",
-                    bottom: 0,
-                    width: "100%",
-                    borderRadius: 20,
-                    backgroundColor: [
-                      "#F8EBCB",
-                      "#F3D4DF",
-                      "#F8DDB7",
-                      "#DCE8E5",
-                    ][i % 4],
-                    paddingHorizontal: 7,
-                    paddingVertical: 0,
-                    justifyContent: "flex-end",
-                    alignItems: "center",
-                    gap: 5,
-                  }}
-                ></View>
-                <View
-                  style={{
-                    alignItems: "center",
-                    gap: 4,
-                    paddingTop: 9,
-                    minHeight: 70,
-                    paddingBottom: 15,
-                  }}
-                >
-                  <DrinkIcon drink={g.drink} size={26} />
-                  <T size={12} bold style={{ textAlign: "center" }}>
-                    {formatVolume(g.ml, settings.units)}
-                  </T>
-                  <T size={11} style={{ textAlign: "center" }}>
-                    {g.drink.name}
-                  </T>
-                </View>
-              </Pressable>
-            ))}
-          </ScrollView>
-        ) : (
-          <View style={{ paddingVertical: 36, alignItems: "center", gap: 10 }}>
-            <T size={22} bold>
-              Add your first drink
-            </T>
-            <T muted style={{ textAlign: "center" }}>
-              Your drinks and daily totals will appear here.
-            </T>
-            <Button title="Add a drink" onPress={() => router.push("/add")} />
-          </View>
-        )}
-        <View
-          style={{ flexDirection: fontScale > 1.3 ? "column" : "row", gap: 18 }}
-        >
-          {(["caffeine", "sugar", "calories"] as const).map((k) => (
-            <Pressable
-              key={k}
-              onPress={() =>
-                router.push(k === "caffeine" ? "/caffeine" : "/balance")
-              }
-              style={{ flex: 1, gap: 5 }}
-            >
-              <T size={12} muted>
-                {k[0].toUpperCase() + k.slice(1)}
-              </T>
-              <T size={20} bold>
-                {Math.round(sum[k])}{" "}
-                <T size={12} muted>
-                  {k === "sugar" ? "g" : k === "calories" ? "kcal" : "mg"}
-                </T>
-              </T>
-              {sum.missing[k] > 0 ? (
-                <T size={11} muted>
-                  {sum.missing[k]} missing data
-                </T>
-              ) : null}
-            </Pressable>
-          ))}
-        </View>
-        <View style={{ gap: 8 }}>
-          {dailyLimitNotices(sum, settings).map((notice) => (
-            <View
-              key={notice.key}
-              accessibilityRole={notice.over ? "alert" : undefined}
-              style={{
-                borderLeftWidth: 3,
-                borderColor: notice.over ? "#B34B32" : "#6FAEE8",
-                paddingLeft: 12,
-                paddingVertical: 5,
-                gap: 4,
-              }}
-            >
-              <T
-                size={14}
-                bold={notice.over}
-                style={notice.over ? { color: "#913E2B" } : undefined}
-              >
-                {notice.over ? "Above limit · " : ""}
-                {notice.text}
-              </T>
-              {notice.detail ? (
-                <T size={12} muted>
-                  {notice.detail}
-                </T>
-              ) : null}
-            </View>
-          ))}
-        </View>
+        <WaterHeadline />
+        <HomeDrinkGoals />
         <View style={{ gap: 10, alignSelf: "stretch" }}>
           <T size={13} muted>
             Quick add
@@ -435,6 +219,11 @@ export default function Today() {
         </View>
         <View>
           <AlcoholControls summary />
+          {!today.length ? (
+            <T muted>
+              No drinks logged today. Use Quick add or tap the plus to log one.
+            </T>
+          ) : null}
           {(showAllRecent ? today : today.slice(0, 3)).map((e) => (
             <Row
               key={e.id}

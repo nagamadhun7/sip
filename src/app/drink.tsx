@@ -1,3 +1,5 @@
+import { extraNutrients, isPlainWater } from "../features/drink-goals";
+import { Host, Switch } from "@expo/ui";
 import { AccessiblePressable as Pressable } from "../components/accessible-pressable";
 import { regionalOunce } from "../features/locale";
 import { DrinkIcon } from "../components/drink-icon";
@@ -111,6 +113,17 @@ export default function DrinkForm() {
   const [abv, setAbv] = useState(
     initial.alcohol_abv == null ? "" : String(initial.alcohol_abv),
   );
+  const [extra, setExtra] = useState(() =>
+    Object.fromEntries(
+      extraNutrients.map((k) => [
+        k,
+        initial.extraNutrition?.[k] == null
+          ? ""
+          : String(initial.extraNutrition[k]),
+      ]),
+    ),
+  );
+  const [plainWater, setPlainWater] = useState(isPlainWater(initial));
   const draft = (): Entry => ({
     id: existing?.id ?? id(),
     health: existing?.health,
@@ -118,6 +131,10 @@ export default function DrinkForm() {
     at: at.toISOString(),
     drink: {
       ...initial,
+      fluidType: plainWater ? "plain-water" : "other",
+      extraNutrition: Object.fromEntries(
+        extraNutrients.map((k) => [k, norm(extra[k])]),
+      ),
       alcohol_abv: abv.trim() ? Number(abv) : undefined,
       name: name.trim(),
       serving: amount,
@@ -161,6 +178,17 @@ export default function DrinkForm() {
         "glass",
       );
       setInitial(drink);
+      setPlainWater(false);
+      setExtra(
+        Object.fromEntries(
+          extraNutrients.map((k) => [
+            k,
+            drink.extraNutrition?.[k] == null
+              ? ""
+              : String(drink.extraNutrition[k]),
+          ]),
+        ) as Record<(typeof extraNutrients)[number], string>,
+      );
       setName(drink.name);
       setMl(String(+(drink.serving / factor).toFixed(3)));
       setNutrition(
@@ -413,6 +441,13 @@ export default function DrinkForm() {
           </T>
         </>
       ) : null}
+      <Host matchContents>
+        <Switch
+          label="This is plain, unsweetened water"
+          value={plainWater}
+          onValueChange={setPlainWater}
+        />
+      </Host>
       <View style={{ gap: 5 }}>
         <T size={20} bold>
           Nutrition
@@ -424,6 +459,27 @@ export default function DrinkForm() {
           {initial.source}
         </T>
       </View>
+      {extraNutrients.map((k) => (
+        <Input
+          key={k}
+          numeric
+          label={`${{ added_sugar: "Added sugar", calcium: "Calcium", vitamin_d: "Vitamin D" }[k]} (${k === "added_sugar" ? "g" : k === "calcium" ? "mg" : "µg"} / 100 ml)`}
+          value={extra[k]}
+          onChangeText={(value) =>
+            setExtra((values) => ({ ...values, [k]: value }))
+          }
+          placeholder="Not listed"
+        />
+      ))}
+      {extra.added_sugar.trim() &&
+      nutrition.sugar.trim() &&
+      norm(extra.added_sugar)! <= norm(nutrition.sugar)! ? (
+        <T size={12} muted>
+          Natural sugar:{" "}
+          {+(norm(nutrition.sugar)! - norm(extra.added_sugar)!).toFixed(2)} g /
+          100 ml (total minus added).
+        </T>
+      ) : null}
       {nutrients.map((k) => (
         <View
           key={k}
