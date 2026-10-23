@@ -1,2 +1,37 @@
-import React from 'react';import {View} from 'react-native';import {useStore} from '../state/store';import {locales,AppLocale} from '../features/locale';import {T,Button,ErrorText} from './ui';
-export function LanguageControls(){const store=useStore(),[error,setError]=React.useState('');return <View style={{gap:10}}><T bold size={22}>Language and region</T>{Object.entries(locales).map(([locale,name])=><Button key={locale} secondary title={`${store.settings.locale===locale?'✓ ':''}${name}`} onPress={()=>void store.saveSettings({...store.settings,locale:locale as AppLocale,units:locale==='en-US'?'oz':'ml'}).catch(e=>setError(e.message))}/>)}<T size={12} muted>English, Spanish and French labels and local drink aliases. Untranslated explanatory text stays in English.</T><ErrorText error={error}/></View>;}
+import React from "react";
+import { View } from "react-native";
+import { useStore } from "../state/store";
+import { locales, AppLocale } from "../features/locale";
+import { T, Button, ErrorText } from "./ui";
+export function LanguageControls() {
+  const store = useStore(),
+    [error, setError] = React.useState("");
+  return (
+    <View style={{ gap: 10 }}>
+      <T bold size={22}>
+        Language and region
+      </T>
+      {Object.entries(locales).map(([locale, name]) => (
+        <Button
+          key={locale}
+          secondary
+          title={`${store.settings.locale === locale ? "✓ " : ""}${name}`}
+          onPress={() =>
+            void store
+              .saveSettings({
+                ...store.settings,
+                locale: locale as AppLocale,
+                units: locale === "en-US" ? "oz" : "ml",
+              })
+              .catch((e) => setError(e.message))
+          }
+        />
+      ))}
+      <T size={12} muted>
+        English, Spanish and French labels and local drink aliases. Untranslated
+        explanatory text stays in English.
+      </T>
+      <ErrorText error={error} />
+    </View>
+  );
+}

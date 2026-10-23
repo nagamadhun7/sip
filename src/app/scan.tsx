@@ -11,8 +11,13 @@ import { id } from "../lib/model";
 import { lookupBarcode } from "../lib/barcode";
 import { Page, T, Input, Button, ErrorText } from "../components/ui";
 export default function Scan() {
-  const params=useLocalSearchParams<{compare?:string;recognize?:string}>();
-  const [recognized,setRecognized]=useState<Drink|null>(null),[estimatedMl,setEstimatedMl]=useState(""),[photoKind,setPhotoKind]=useState("");
+  const params = useLocalSearchParams<{
+    compare?: string;
+    recognize?: string;
+  }>();
+  const [recognized, setRecognized] = useState<Drink | null>(null),
+    [estimatedMl, setEstimatedMl] = useState(""),
+    [photoKind, setPhotoKind] = useState("");
   const [permission, requestPermission] = useCameraPermissions(),
     [code, setCode] = useState(""),
     [busy, setBusy] = useState(false),
@@ -27,7 +32,7 @@ export default function Scan() {
     store = useStore();
   useEffect(() => () => controller.current?.abort(), []);
   async function lookup(value = code) {
-    value=value.replace(/\s/g,'');
+    value = value.replace(/\s/g, "");
     if (lock.current) return;
     lock.current = true;
     setBusy(true);
@@ -58,10 +63,16 @@ export default function Scan() {
         return;
       }
       await store.saveDrink(drink);
-      if(params.compare==='0'||params.compare==='1'){
-        const ids=[...(store.settings.comparison??['',''])] as [string,string];ids[Number(params.compare)]=drink.id;
-        await store.saveSettings({...store.settings,comparison:ids});router.back();
-      }else router.replace({ pathname: "/drink", params: { drink: drink.id } });
+      if (params.compare === "0" || params.compare === "1") {
+        const ids = [...(store.settings.comparison ?? ["", ""])] as [
+          string,
+          string,
+        ];
+        ids[Number(params.compare)] = drink.id;
+        await store.saveSettings({ ...store.settings, comparison: ids });
+        router.back();
+      } else
+        router.replace({ pathname: "/drink", params: { drink: drink.id } });
     } catch (e) {
       setNotFound(true);
       if (!controller.current?.signal.aborted)
@@ -78,12 +89,13 @@ export default function Scan() {
   return (
     <Page>
       <T size={26} bold>
-        {params.recognize==="1"?"Photograph a drink":"Point at a barcode"}
+        {params.recognize === "1" ? "Photograph a drink" : "Point at a barcode"}
       </T>
       <T size={13} muted>
         Scan a beverage label or enter its barcode. Only the barcode number is
         sent to Open Food Facts first, then USDA if the fallback is configured.
-        Photos stay on this device.
+        Label photos stay on this device. Drink recognition sends a photo only
+        when you request an estimate.
       </T>
       {permission?.granted ? (
         <View
@@ -103,7 +115,7 @@ export default function Scan() {
               barcodeTypes: ["ean13", "ean8", "upc_a", "upc_e"],
             }}
             onBarcodeScanned={
-              scanning && !busy && !photoMode && params.recognize!=="1"
+              scanning && !busy && !photoMode && params.recognize !== "1"
                 ? (result) => void lookup(result.data)
                 : undefined
             }
@@ -144,11 +156,91 @@ export default function Scan() {
           />
         </View>
       )}
-      {params.recognize==='1'?<>
-      <T>Recognition sends this photo to the recipe service only when you tap Estimate drink. A photo cannot establish exact size or ingredients.</T>
-      {permission?.granted?<Button title="Estimate drink" disabled={!ready||busy} onPress={()=>{setBusy(true);setError('');void (async()=>{const image=await camera.current?.takePictureAsync({quality:0.2,base64:true});if(!image?.base64)throw Error('Could not capture photo.');const catalog=[...store.library,...store.catalog].filter(d=>!isAlcohol(d)||alcoholAllowed(store.settings));const result=await callService<{kind:string;drinks:{drink_id:string;amount_ml:number}[];message:string}>('/photo-drinks',{image_base64:image.base64,now:new Date().toISOString(),timezone_offset:new Date().getTimezoneOffset(),catalog:catalog.slice(0,200).map(d=>({id:d.id,name:d.name,serving:d.serving}))});setPhotoKind(result.kind);const p=result.drinks[0];setRecognized(p?catalog.find(d=>d.id===p.drink_id)??null:null);setEstimatedMl(p?String(p.amount_ml):'');if(!p)setError(result.message);})().catch(e=>setError(e.message)).finally(()=>setBusy(false));}}/>:null}
-      {recognized?<><T bold>Estimated: {recognized.name}</T><Input numeric label="Estimated size (ml) — edit before saving" value={estimatedMl} onChangeText={setEstimatedMl}/><Button title={photoKind==='soup'?'Log as a drink anyway':'Confirm and edit drink'} onPress={()=>{if(!Number.isFinite(Number(estimatedMl))||Number(estimatedMl)<=0||Number(estimatedMl)>10000){setError('Enter a size from 1 to 10,000 ml.');return;}router.replace({pathname:'/drink',params:{drink:recognized.id,estimated_ml:estimatedMl}});}}/></>:null}
-      </>:null}
+      {params.recognize === "1" ? (
+        <>
+          <T>
+            Recognition sends this photo to the recipe service only when you tap
+            Estimate drink. A photo cannot establish exact size or ingredients.
+          </T>
+          {permission?.granted ? (
+            <Button
+              title="Estimate drink"
+              disabled={!ready || busy}
+              onPress={() => {
+                setBusy(true);
+                setError("");
+                void (async () => {
+                  const image = await camera.current?.takePictureAsync({
+                    quality: 0.2,
+                    base64: true,
+                  });
+                  if (!image?.base64) throw Error("Could not capture photo.");
+                  const catalog = [...store.library, ...store.catalog].filter(
+                    (d) => !isAlcohol(d) || alcoholAllowed(store.settings),
+                  );
+                  const result = await callService<{
+                    kind: string;
+                    drinks: { drink_id: string; amount_ml: number }[];
+                    message: string;
+                  }>("/photo-drinks", {
+                    image_base64: image.base64,
+                    now: new Date().toISOString(),
+                    timezone_offset: new Date().getTimezoneOffset(),
+                    catalog: catalog.slice(0, 200).map((d) => ({
+                      id: d.id,
+                      name: d.name,
+                      serving: d.serving,
+                    })),
+                  });
+                  setPhotoKind(result.kind);
+                  const p = result.drinks[0];
+                  setRecognized(
+                    p
+                      ? (catalog.find((d) => d.id === p.drink_id) ?? null)
+                      : null,
+                  );
+                  setEstimatedMl(p ? String(p.amount_ml) : "");
+                  if (!p) setError(result.message);
+                })()
+                  .catch((e) => setError(e.message))
+                  .finally(() => setBusy(false));
+              }}
+            />
+          ) : null}
+          {recognized ? (
+            <>
+              <T bold>Estimated: {recognized.name}</T>
+              <Input
+                numeric
+                label="Estimated size (ml) — edit before saving"
+                value={estimatedMl}
+                onChangeText={setEstimatedMl}
+              />
+              <Button
+                title={
+                  photoKind === "soup"
+                    ? "Log as a drink anyway"
+                    : "Confirm and edit drink"
+                }
+                onPress={() => {
+                  if (
+                    !Number.isFinite(Number(estimatedMl)) ||
+                    Number(estimatedMl) <= 0 ||
+                    Number(estimatedMl) > 10000
+                  ) {
+                    setError("Enter a size from 1 to 10,000 ml.");
+                    return;
+                  }
+                  router.replace({
+                    pathname: "/drink",
+                    params: { drink: recognized.id, estimated_ml: estimatedMl },
+                  });
+                }}
+              />
+            </>
+          ) : null}
+        </>
+      ) : null}
       {photoMode && permission?.granted ? (
         <Button
           title="Capture label"
@@ -164,7 +256,12 @@ export default function Scan() {
               await new File(photo.uri).copy(destination);
               router.replace({
                 pathname: "/drink",
-                params: { custom: "1", barcode: code, photo: destination.uri },
+                params: {
+                  custom: "1",
+                  barcode: code,
+                  photo: destination.uri,
+                  compare: params.compare,
+                },
               });
             } catch (e) {
               setError((e as Error).message);
@@ -214,13 +311,17 @@ export default function Scan() {
             onPress={() =>
               router.replace({
                 pathname: "/drink",
-                params: { custom: "1", barcode: code },
+                params: { custom: "1", barcode: code, compare: params.compare },
               })
             }
           />
         </View>
       ) : null}
-      {!scanning && !busy && !photoMode && params.recognize!=="1" && permission?.granted ? (
+      {!scanning &&
+      !busy &&
+      !photoMode &&
+      params.recognize !== "1" &&
+      permission?.granted ? (
         <Button
           secondary
           title="Scan again"

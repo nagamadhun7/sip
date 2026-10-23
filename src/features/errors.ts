@@ -1,1 +1,6 @@
-export function connectionMessage(error:unknown){const name=error instanceof Error?error.name:'';return name==='AbortError'||name==='TimeoutError'?'The request timed out. Retry when connected; manual logging and saved drinks work offline.':'Could not connect. Check your connection and retry. Manual logging and saved drinks work offline.';}
+export function connectionMessage(error: unknown) {
+  const name = error instanceof Error ? error.name : "";
+  return name === "AbortError" || name === "TimeoutError"
+    ? "The request timed out. Retry when connected; manual logging and saved drinks work offline."
+    : "Could not connect. Check your connection and retry. Manual logging and saved drinks work offline.";
+}

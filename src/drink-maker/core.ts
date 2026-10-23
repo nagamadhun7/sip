@@ -512,8 +512,8 @@ export function buildContext(
   const cap = ["unknown", "under18"].includes(profile.age_band)
     ? 0
     : !profile.medical_plan && (profile.pregnant || profile.nursing)
-      ? Math.min(caffeineLimit(settings,entries), 200)
-      : caffeineLimit(settings,entries);
+      ? Math.min(caffeineLimit(settings, entries), 200)
+      : caffeineLimit(settings, entries);
   return {
     sugar_left: Math.max(0, settings.sugar - today.sugar),
     caffeine_left: Math.max(0, cap - today.caffeine),

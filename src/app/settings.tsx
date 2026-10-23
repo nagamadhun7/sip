@@ -109,7 +109,11 @@ export default function SettingsScreen() {
       ))}
       <Row
         title="Units"
-        detail={store.settings.locale==="en-GB"?"Fluid ounces are imperial fl oz":"Fluid ounces are US fl oz"}
+        detail={
+          store.settings.locale === "en-GB"
+            ? "Fluid ounces are imperial fl oz"
+            : "Fluid ounces are US fl oz"
+        }
         value={store.settings.units === "ml" ? "ml" : "fl oz"}
         onPress={
           busy

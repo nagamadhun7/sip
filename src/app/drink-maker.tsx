@@ -1,14 +1,9 @@
+import { alcoholAllowed } from "../features/alcohol";
 import { AccessiblePressable as Pressable } from "../components/accessible-pressable";
 import { DrinkAppearance } from "../components/drink-appearance";
 import type { IconShape } from "../lib/drink-icons";
 import React, { useEffect, useRef, useState } from "react";
-import {
-  View,
-  
-  StyleSheet,
-  Keyboard,
-  ActivityIndicator,
-} from "react-native";
+import { View, StyleSheet, Keyboard, ActivityIndicator } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useStore } from "../state/store";
 import { Page, T, Input, Row, ErrorText, colors } from "../components/ui";
@@ -126,6 +121,7 @@ export default function DrinkMaker() {
     [usage, setUsage] = useState(""),
     [color, setColor] = useState(saved?.color ?? "#6FAEE8"),
     [shape, setShape] = useState<IconShape>(saved?.shape ?? "glass");
+  const [abv,setAbv]=useState(saved?.alcohol_abv==null?"":String(saved.alcohol_abv));
   const generation = useRef<AbortController | null>(null),
     saveLock = useRef(false),
     variation = useRef(0);
@@ -257,7 +253,8 @@ export default function DrinkMaker() {
         );
       if (!/^#[0-9a-f]{6}$/i.test(color))
         throw Error("Enter a six-digit icon color, such as #6FAEE8.");
-      const drink = toDrink(selected, stableId, color, shape);
+      if(abv.trim()&&(!Number.isFinite(Number(abv))||Number(abv)<0||Number(abv)>100))throw Error("Enter ABV from 0 to 100 percent.");
+      const drink = {...toDrink(selected, stableId, color, shape),alcohol_abv:abv.trim()?Number(abv):undefined};
       if ((calculate(selected.ingredients).nutrition.caffeine ?? 0) > 200)
         throw Error(
           "Keep this recipe at or below 200 mg caffeine. Reduce coffee or espresso in Lab.",
@@ -642,6 +639,7 @@ export default function DrinkMaker() {
           ) : null}
         </>
       )}
+      {alcoholAllowed(store.settings)?<Input numeric label="Alcohol by volume (%), if alcoholic" value={abv} onChangeText={setAbv}/>:null}
       <DrinkAppearance
         shape={shape}
         color={color}

@@ -1,3 +1,4 @@
+import { createWriteQueue } from "./write-queue";
 import { advanceCutback } from "../features/cutback";
 import { defaultReminderPreferences } from "./reminder-plan";
 import * as SQLite from "expo-sqlite";
@@ -6,11 +7,13 @@ import { drinks as seeds } from "../data/drinks";
 import ingredientData from "../data/ingredients.json";
 import { ingredients as liveIngredients } from "../drink-maker/core";
 import type { Container } from "./tracking";
+const enqueueWrite = createWriteQueue();
 let promise: Promise<SQLite.SQLiteDatabase> | undefined;
 export function db() {
   return (promise ??= (async () => {
     const d = await SQLite.openDatabaseAsync("sip-v1.db");
-    await d.execAsync(`PRAGMA journal_mode=WAL;
+    await d.execAsync(`PRAGMA busy_timeout=5000;
+PRAGMA journal_mode=WAL;
 CREATE TABLE IF NOT EXISTS records(id TEXT PRIMARY KEY NOT NULL,at TEXT NOT NULL,payload TEXT NOT NULL);
 CREATE INDEX IF NOT EXISTS records_at ON records(at);
 CREATE TABLE IF NOT EXISTS library(id TEXT PRIMARY KEY NOT NULL,payload TEXT NOT NULL);
@@ -47,7 +50,23 @@ PRAGMA user_version=3;`);
         }),
       );
     });
-    return d;
+    return new Proxy(d, {
+      get(target, key) {
+        if (key === "runAsync")
+          return (...args: unknown[]) =>
+            enqueueWrite(() => Reflect.apply(target.runAsync, target, args));
+        if (key === "withExclusiveTransactionAsync")
+          return (body: (tx: SQLite.SQLiteDatabase) => Promise<void>) =>
+            enqueueWrite(() =>
+              target.withExclusiveTransactionAsync(async (tx) => {
+                await tx.execAsync("PRAGMA busy_timeout=5000");
+                await body(tx);
+              }),
+            );
+        const value = Reflect.get(target, key);
+        return typeof value === "function" ? value.bind(target) : value;
+      },
+    });
   })().catch((e) => {
     promise = undefined;
     throw e;
@@ -88,11 +107,20 @@ export async function load() {
     ...(pref ? JSON.parse(pref.payload) : {}),
     ...(profile ? { profile: JSON.parse(profile.payload) } : {}),
   } as Settings;
-  if(settings.cutback) settings.cutback=advanceCutback(settings.cutback,rows.map(r=>JSON.parse(r.payload)));
-  if (!pref || !JSON.parse(pref.payload).reminderPreferences || JSON.stringify(settings)!==pref.payload)
+  if (settings.cutback)
+    settings.cutback = advanceCutback(
+      settings.cutback,
+      rows.map((r) => JSON.parse(r.payload)),
+    );
+  const savedSettings = pref ? JSON.parse(pref.payload) : {};
+  if (
+    pref &&
+    JSON.stringify(settings.cutback) !== JSON.stringify(savedSettings.cutback)
+  )
     await d.runAsync(
-      "INSERT OR REPLACE INTO preferences(id,payload) VALUES(1,?)",
+      "UPDATE preferences SET payload=? WHERE id=1 AND payload=?",
       JSON.stringify(settings),
+      pref.payload,
     );
   return {
     entries: rows.map((r) => JSON.parse(r.payload) as Entry),

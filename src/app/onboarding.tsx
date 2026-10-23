@@ -1,6 +1,6 @@
 import { AccessiblePressable as Pressable } from "../components/accessible-pressable";
 import React, { useState } from "react";
-import { View, } from "react-native";
+import { View } from "react-native";
 import { router, Redirect, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStore } from "../state/store";

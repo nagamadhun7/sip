@@ -1,6 +1,6 @@
 import { AccessiblePressable as Pressable } from "./accessible-pressable";
 import React from "react";
-import { View, } from "react-native";
+import { View } from "react-native";
 import { T, Input } from "./ui";
 import { DrinkIcon } from "./drink-icon";
 import { iconShapes, iconColor } from "../lib/drink-icons";

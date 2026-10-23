@@ -8,13 +8,7 @@ import React, {
   useState,
   useCallback,
 } from "react";
-import {
-  ActivityIndicator,
-  Text,
-  View,
-  
-  AppState,
-} from "react-native";
+import { ActivityIndicator, Text, View, AppState } from "react-native";
 import { Drink, Entry, Settings, defaults } from "../lib/model";
 import * as storage from "../lib/database";
 import { setReminders } from "../lib/reminders";
@@ -56,7 +50,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const hydrate = useCallback(async () => {
     try {
       const loaded = await storage.load();
-      setLocale(loaded.settings.locale??"en-US");
+      setLocale(loaded.settings.locale ?? "en-US");
       setState(loaded);
       setError("");
       setReady(true);
@@ -71,8 +65,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     void storage.load().then(
       (loaded) => {
         if (active) {
-          setLocale(loaded.settings.locale??"en-US");
-      setState(loaded);
+          setLocale(loaded.settings.locale ?? "en-US");
+          setState(loaded);
           setReady(true);
         }
       },
@@ -127,17 +121,17 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     serviceError: error,
     reload: hydrate,
     saveEntries: async (entries) => {
-      requireAlcoholAccess(entries,state.settings);
+      requireAlcoholAccess(entries, state.settings);
       await storage.putEntries(entries);
       await hydrate();
     },
     saveJournalEntries: async (entries) => {
-      requireAlcoholAccess(entries,state.settings);
+      requireAlcoholAccess(entries, state.settings);
       await storage.putJournalEntries(entries);
       await hydrate();
     },
     saveEntry: async (e) => {
-      requireAlcoholAccess([e],state.settings);
+      requireAlcoholAccess([e], state.settings);
       await storage.putEntry(e);
       await hydrate();
     },

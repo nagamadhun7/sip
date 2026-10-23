@@ -84,4 +84,9 @@ test("CSV escapes quoted names and preserves missing values", () => {
   assert.match(csv, /"100"/);
   assert.match(csv, /"",/);
 });
-test('CSV neutralizes spreadsheet formulas in drink names',()=>{assert.match(exportCsv([{...entry,drink:{...entry.drink,name:'=1+1'}}]),/"'=1\+1"/)});
+test("CSV neutralizes spreadsheet formulas in drink names", () => {
+  assert.match(
+    exportCsv([{ ...entry, drink: { ...entry.drink, name: "=1+1" } }]),
+    /"'=1\+1"/,
+  );
+});

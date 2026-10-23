@@ -30,8 +30,8 @@ export function LogInput() {
     [paywall, setPaywall] = useState(false),
     [draftReady, setDraftReady] = useState(false),
     [draftStatus, setDraftStatus] = useState("Loading draft…"),
-    [skipped,setSkipped]=useState<string[]>([]),
-    [soupOffer,setSoupOffer]=useState(false),
+    [skipped, setSkipped] = useState<string[]>([]),
+    [soupOffer, setSoupOffer] = useState(false),
     [method, setMethod] = useState(""),
     [details, setDetails] = useState<number | null>(null);
   const cleanup = useRef<null | (() => void)>(null),
@@ -119,14 +119,14 @@ export function LogInput() {
           setError(message);
           setListening(false);
         },
-        store.settings.locale??"en-US",
+        store.settings.locale ?? "en-US",
       );
       setListening(true);
     } catch (e) {
       setError((e as Error).message);
     }
   }
-  async function match(includeSoup=false) {
+  async function match(includeSoup = false) {
     if (lock.current) return;
     lock.current = true;
     setBusy(true);
@@ -136,13 +136,39 @@ export function LogInput() {
     setNotice("");
     const now = new Date();
     try {
-      const normalized=normalizeDrinkText(text,store.settings.locale??"en-US");
-      const parts=partitionInput(normalized,catalog.map(d=>d.name));
-      setSkipped(parts.skipped);setSoupOffer(parts.soup.length>0&&!includeSoup);
-      setNotice(parts.skipped.length?`Skipped: ${parts.skipped.join('; ')}.`:'');
-      const accepted=[...parts.drinks,...(includeSoup?parts.soup:[])].join(' and ');
-      if(!accepted){if(parts.soup.length){setNotice('Soup or broth can be logged as a drink if you choose. Include an amount in ml.');return;}throw Error('No drinks found. Nothing was logged.');}
-      let result = parseLocal(accepted,catalog,store.containers,now,store.settings.locale??"en-US");
+      const normalized = normalizeDrinkText(
+        text,
+        store.settings.locale ?? "en-US",
+      );
+      const parts = partitionInput(
+        normalized,
+        catalog.map((d) => d.name),
+      );
+      setSkipped(parts.skipped);
+      setSoupOffer(parts.soup.length > 0 && !includeSoup);
+      setNotice(
+        parts.skipped.length ? `Skipped: ${parts.skipped.join("; ")}.` : "",
+      );
+      const accepted = [
+        ...parts.drinks,
+        ...(includeSoup ? parts.soup : []),
+      ].join(" and ");
+      if (!accepted) {
+        if (parts.soup.length) {
+          setNotice(
+            "Soup or broth can be logged as a drink if you choose. Include an amount in ml.",
+          );
+          return;
+        }
+        throw Error("No drinks found. Nothing was logged.");
+      }
+      let result = parseLocal(
+        accepted,
+        catalog,
+        store.containers,
+        now,
+        store.settings.locale ?? "en-US",
+      );
       const local = result !== null;
       if (!result) {
         const safe = checkRequest(accepted);
@@ -151,7 +177,7 @@ export function LogInput() {
         const response = await callService(
           "/parse-drinks",
           {
-            text:accepted,
+            text: accepted,
             now: now.toISOString(),
             timezone_offset: now.getTimezoneOffset(),
             catalog: catalog
@@ -189,7 +215,9 @@ export function LogInput() {
     try {
       const rows = reviewEntries(review, catalog, store.settings.units, id);
       await store.saveJournalEntries(rows);
-      setNotice(`${rows.length} drink${rows.length === 1 ? "" : "s"} logged.${skipped.length?` Skipped: ${skipped.join("; ")}.`:""}`);
+      setNotice(
+        `${rows.length} drink${rows.length === 1 ? "" : "s"} logged.${skipped.length ? ` Skipped: ${skipped.join("; ")}.` : ""}`,
+      );
       setReview([]);
       setText("");
       setDraftStatus("");
@@ -342,7 +370,13 @@ export function LogInput() {
           ) : null}
         </>
       ) : null}
-      {soupOffer?<Button secondary title="Log soup or broth as a drink anyway" onPress={()=>void match(true)} />:null}
+      {soupOffer ? (
+        <Button
+          secondary
+          title="Log soup or broth as a drink anyway"
+          onPress={() => void match(true)}
+        />
+      ) : null}
       <ErrorText error={error} />
       {notice ? <T>{notice}</T> : null}
       {paywall ? (

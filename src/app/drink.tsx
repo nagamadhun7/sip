@@ -3,7 +3,7 @@ import { regionalOunce } from "../features/locale";
 import { DrinkIcon } from "../components/drink-icon";
 import { DrinkAppearance } from "../components/drink-appearance";
 import React, { useState } from "react";
-import { View,  Alert, Platform, Image } from "react-native";
+import { View, Alert, Platform, Image } from "react-native";
 import { router, useLocalSearchParams, Stack } from "expo-router";
 import { DateTimePicker } from "@expo/ui/community/datetime-picker";
 import { useStore } from "../state/store";
@@ -33,6 +33,7 @@ import { buildContext, toDrink, adjustRecipe } from "../drink-maker/core";
 export default function DrinkForm() {
   const params = useLocalSearchParams<{
     drink?: string;
+    compare?: string;
     estimated_ml?: string;
     entry?: string;
     custom?: string;
@@ -70,8 +71,12 @@ export default function DrinkForm() {
     [ml, setMl] = useState(
       String(
         +(
-          (params.estimated_ml?Number(params.estimated_ml):(existing?.ml ?? initial.serving)) /
-          (store.settings.units === "oz" ? regionalOunce(store.settings.locale??"en-US") : 1)
+          (params.estimated_ml
+            ? Number(params.estimated_ml)
+            : (existing?.ml ?? initial.serving)) /
+          (store.settings.units === "oz"
+            ? regionalOunce(store.settings.locale ?? "en-US")
+            : 1)
         ).toFixed(3),
       ),
     ),
@@ -96,11 +101,16 @@ export default function DrinkForm() {
     sodium: "mg",
     potassium: "mg",
   };
-  const factor = store.settings.units === "oz" ? regionalOunce(store.settings.locale??"en-US") : 1;
+  const factor =
+    store.settings.units === "oz"
+      ? regionalOunce(store.settings.locale ?? "en-US")
+      : 1;
   const amount = Number(ml.replace(",", ".")) * factor;
   const norm = (s: string) =>
     s.trim() === "" ? null : Number(s.replace(",", "."));
-  const [abv,setAbv]=useState(initial.alcohol_abv==null?"":String(initial.alcohol_abv));
+  const [abv, setAbv] = useState(
+    initial.alcohol_abv == null ? "" : String(initial.alcohol_abv),
+  );
   const draft = (): Entry => ({
     id: existing?.id ?? id(),
     health: existing?.health,
@@ -108,7 +118,7 @@ export default function DrinkForm() {
     at: at.toISOString(),
     drink: {
       ...initial,
-      alcohol_abv:abv.trim()?Number(abv):undefined,
+      alcohol_abv: abv.trim() ? Number(abv) : undefined,
       name: name.trim(),
       serving: amount,
       missingNutrition: nutrients.every(
@@ -175,9 +185,24 @@ export default function DrinkForm() {
     try {
       if (!/^#[0-9a-f]{6}$/i.test(initial.color))
         throw Error("Enter a six-digit icon color, such as #6FAEE8.");
-      if(abv.trim()&&(!Number.isFinite(Number(abv))||Number(abv)<0||Number(abv)>100))throw Error("Enter ABV from 0 to 100 percent.");
+      if (
+        abv.trim() &&
+        (!Number.isFinite(Number(abv)) || Number(abv) < 0 || Number(abv) > 100)
+      )
+        throw Error("Enter ABV from 0 to 100 percent.");
       const entry = draft();
       validateEntry(entry);
+      if (params.compare === "0" || params.compare === "1") {
+        await store.saveDrink(entry.drink);
+        const comparison = [...(store.settings.comparison ?? ["", ""])] as [
+          string,
+          string,
+        ];
+        comparison[Number(params.compare)] = entry.drink.id;
+        await store.saveSettings({ ...store.settings, comparison });
+        router.back();
+        return;
+      }
       if (onlyLibrary || !base || params.custom)
         await store.saveDrink({ ...entry.drink, id: base?.id ?? initial.id });
       if (containerName.trim()) {
@@ -214,12 +239,27 @@ export default function DrinkForm() {
       setBusy(false);
     }
   }
-  if(params.drink&&!base)return <Page><T>This saved drink is unavailable. Choose another drink or enter it manually.</T><Button title="Choose a drink" onPress={()=>router.replace('/add')}/></Page>;
+  if (params.drink && !base)
+    return (
+      <Page>
+        <T>
+          This saved drink is unavailable. Choose another drink or enter it
+          manually.
+        </T>
+        <Button title="Choose a drink" onPress={() => router.replace("/add")} />
+      </Page>
+    );
   return (
     <Page
       footer={
         <Button
-          title={existing ? "Save changes" : "Add to today"}
+          title={
+            params.compare === "0" || params.compare === "1"
+              ? "Use in comparison"
+              : existing
+                ? "Save changes"
+                : "Add to today"
+          }
           onPress={() => save()}
           busy={busy}
         />
@@ -257,7 +297,15 @@ export default function DrinkForm() {
           }
         />
       ) : null}
-      {(store.settings.profile?.age??0)>=18&&store.settings.makerProfile?.alcohol_tracking?<Input numeric label="Alcohol by volume (%), if alcoholic" value={abv} onChangeText={setAbv}/>:null}
+      {(store.settings.profile?.age ?? 0) >= 18 &&
+      store.settings.makerProfile?.alcohol_tracking ? (
+        <Input
+          numeric
+          label="Alcohol by volume (%), if alcoholic"
+          value={abv}
+          onChangeText={setAbv}
+        />
+      ) : null}
       {initial.label_photo ? (
         <>
           <Image

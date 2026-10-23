@@ -1,3 +1,4 @@
+import { regionalOunce } from "../features/locale";
 import { AccessiblePressable as Pressable } from "../components/accessible-pressable";
 import { AlcoholControls } from "../components/alcohol-controls";
 import { caffeineLimit } from "../features/cutback";
@@ -23,15 +24,25 @@ import {
   Button,
 } from "../components/ui";
 export default function Today() {
-  const { entries, settings: baseSettings, saveEntry, saveEntries, undoLabel, undo } =
-      useStore(),
+  const {
+      entries,
+      settings: baseSettings,
+      saveEntry,
+      saveEntries,
+      undoLabel,
+      undo,
+    } = useStore(),
     safe = useSafeAreaInsets();
   const [error, setError] = useState(""),
     [pending, setPending] = useState(false),
     day = useToday();
-  const {fontScale}=useWindowDimensions();
+  const { fontScale } = useWindowDimensions();
   const lock = useRef(false);
-  const settings={...baseSettings,water:situationTarget(baseSettings,day),caffeine:caffeineLimit(baseSettings,entries,day)};
+  const settings = {
+    ...baseSettings,
+    water: situationTarget(baseSettings, day),
+    caffeine: caffeineLimit(baseSettings, entries, day),
+  };
   const quicks = quickHistory(entries);
   if (!settings.onboarded) return <Redirect href="/onboarding" />;
   const today = onDay(entries, day),
@@ -115,8 +126,8 @@ export default function Today() {
             accessibilityLabel={`Hydration balance, ${formatVolume(sum.water, settings.units)} of ${formatVolume(settings.water, settings.units)}`}
             onPress={() => router.push("/balance")}
             style={{
-              flexDirection: fontScale>1.3?"column":"row",
-              alignItems: fontScale>1.3?"flex-start":"center",
+              flexDirection: fontScale > 1.3 ? "column" : "row",
+              alignItems: fontScale > 1.3 ? "flex-start" : "center",
               gap: 28,
               paddingVertical: 6,
               paddingLeft: 14,
@@ -127,7 +138,9 @@ export default function Today() {
               <T size={58} bold>
                 {settings.units === "ml"
                   ? (sum.water / 1000).toFixed(1)
-                  : (sum.water / 29.5735).toFixed(0)}
+                  : (
+                      sum.water / regionalOunce(settings.locale ?? "en-US")
+                    ).toFixed(0)}
                 <T size={19} muted>
                   {" "}
                   {settings.units === "ml" ? "L" : "fl oz"}
@@ -172,7 +185,9 @@ export default function Today() {
             />
           </Pressable>
         )}
-        <View style={{ flexDirection: fontScale>1.3?"column":"row", gap: 12 }}>
+        <View
+          style={{ flexDirection: fontScale > 1.3 ? "column" : "row", gap: 12 }}
+        >
           {quicks.map((previous, idx) => (
             <Pressable
               key={idx}
@@ -227,7 +242,9 @@ export default function Today() {
             />
           </View>
         ) : null}
-        <View style={{ flexDirection: fontScale>1.3?"column":"row", gap: 24 }}>
+        <View
+          style={{ flexDirection: fontScale > 1.3 ? "column" : "row", gap: 24 }}
+        >
           {(["caffeine", "sugar", "calories"] as const).map((k) => (
             <Pressable
               key={k}
@@ -280,7 +297,7 @@ export default function Today() {
         ) : (
           <View>
             <AlcoholControls summary />
-          {today.map((e) => (
+            {today.map((e) => (
               <Row
                 key={e.id}
                 title={e.drink.name}

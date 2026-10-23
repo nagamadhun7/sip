@@ -47,7 +47,10 @@ test("removing a match excludes it and ounce edits use the real volume conversio
     [{ drink_id: "coffee", amount_ml: 100, at: now.toISOString() }],
     "oz",
   );
-  assert.equal(reviewEntries(rows, [coffee], "oz", () => "unchanged")[0].ml, 100);
+  assert.equal(
+    reviewEntries(rows, [coffee], "oz", () => "unchanged")[0].ml,
+    100,
+  );
   rows[0].portion = "8";
   const entry = reviewEntries(rows, [coffee], "oz", () => "a")[0];
   assert.equal(entry.ml, 8 * 29.5735295625);

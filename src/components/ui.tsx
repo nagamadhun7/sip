@@ -4,7 +4,6 @@ import React from "react";
 import {
   View,
   Text,
-  
   ScrollView,
   TextInput,
   StyleSheet,
@@ -36,13 +35,15 @@ export function T({
         {
           fontFamily: bold ? "Nunito_600SemiBold" : "Nunito_400Regular",
           fontSize: size,
-          flexShrink:1,
+          flexShrink: 1,
           color: muted ? colors.muted : colors.ink,
         },
         style,
       ]}
     >
-      {Array.isArray(children)?children.map(c=>translate(c) as React.ReactNode):translate(children) as React.ReactNode}
+      {Array.isArray(children)
+        ? children.map((c) => translate(c) as React.ReactNode)
+        : (translate(children) as React.ReactNode)}
     </Text>
   );
 }
@@ -102,7 +103,7 @@ export function Button({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={String(translate(title))}
-      accessibilityState={{disabled:disabled||busy,busy}}
+      accessibilityState={{ disabled: disabled || busy, busy }}
       disabled={disabled || busy}
       onPress={onPress}
       style={({ pressed }) => ({
@@ -229,7 +230,7 @@ export function Input({
         value={value}
         onChangeText={onChangeText}
         keyboardType={numeric ? "decimal-pad" : "default"}
-        placeholder={placeholder?String(translate(placeholder)):undefined}
+        placeholder={placeholder ? String(translate(placeholder)) : undefined}
         placeholderTextColor={colors.muted}
         multiline={multiline}
         editable={editable}

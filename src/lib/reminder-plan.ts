@@ -1,4 +1,9 @@
-import { activeSituation, situationTarget, inEatingWindow, clockMinutes } from "../features/situations.ts";
+import {
+  activeSituation,
+  situationTarget,
+  inEatingWindow,
+  clockMinutes,
+} from "../features/situations.ts";
 import type { Entry, Settings } from "./model.ts";
 import { localDay, onDay, totals } from "./model.ts";
 export type ReminderPreferences = {
@@ -63,15 +68,22 @@ export function planReminders(
       inQuietHours(at, p)
     )
       return;
-    const mode=activeSituation(settings,localDay(at));
-    if(mode?.mode==='fasting'&&!inEatingWindow(at,mode))return;
+    const mode = activeSituation(settings, localDay(at));
+    if (mode?.mode === "fasting" && !inEatingWindow(at, mode)) return;
     const date = localDay(at),
       sum = totals(onDay(entries, date));
-    const wake = mode?.mode==='fasting'?clockMinutes(mode.start):minute(p.quiet_end),
-      sleep = mode?.mode==='fasting'?clockMinutes(mode.end):minute(p.quiet_start);
+    const wake =
+        mode?.mode === "fasting"
+          ? clockMinutes(mode.start)
+          : minute(p.quiet_end),
+      sleep =
+        mode?.mode === "fasting"
+          ? clockMinutes(mode.end)
+          : minute(p.quiet_start);
     const span = (sleep - wake + 1440) % 1440 || 1440;
     const elapsed = (at.getHours() * 60 + at.getMinutes() - wake + 1440) % 1440;
-    const expected = situationTarget(settings,date) * Math.min(1, elapsed / span);
+    const expected =
+      situationTarget(settings, date) * Math.min(1, elapsed / span);
     if (kind !== "caffeine" && p.only_behind && sum.water >= expected) return;
     const identifier = `sip:${date}:${kind}:${at.getHours()}:${at.getMinutes()}`;
     if (candidates.some((r) => r.id === identifier)) return;
@@ -91,9 +103,15 @@ export function planReminders(
   for (let day = 0; day < 7; day++) {
     const date = new Date(now);
     date.setDate(date.getDate() + day);
-    const mode=activeSituation(settings,localDay(date));
-    if(mode){ for(let minute=0;minute<1440;minute+=mode.interval_minutes){const at=new Date(date);at.setHours(0,minute,0,0);add(at,"hydration");}}
-    for (const hour of mode?[]:settings.reminderHours) {
+    const mode = activeSituation(settings, localDay(date));
+    if (mode) {
+      for (let minute = 0; minute < 1440; minute += mode.interval_minutes) {
+        const at = new Date(date);
+        at.setHours(0, minute, 0, 0);
+        add(at, "hydration");
+      }
+    }
+    for (const hour of mode ? [] : settings.reminderHours) {
       const at = new Date(date);
       at.setHours(hour, 0, 0, 0);
       add(at, "hydration");
@@ -115,7 +133,11 @@ export function planReminders(
   }
   if (p.per_drink && entries.length) {
     const last = entries.reduce((a, b) => (a.at > b.at ? a : b));
-    const at = new Date(Date.parse(last.at) + (activeSituation(settings)?.interval_minutes??p.interval_minutes) * 60000);
+    const at = new Date(
+      Date.parse(last.at) +
+        (activeSituation(settings)?.interval_minutes ?? p.interval_minutes) *
+          60000,
+    );
     add(at, "per-drink");
   }
   if (p.snoozed_until && p.snoozed_until > now.getTime())

@@ -1,11 +1,11 @@
 import { AccessiblePressable as Pressable } from "../components/accessible-pressable";
 import React, { useEffect, useState } from "react";
-import {  Linking } from "react-native";
+import { Linking } from "react-native";
 import { router } from "expo-router";
 import type { PurchasesPackage } from "react-native-purchases";
 import { useStore } from "../state/store";
 import type { Settings } from "../lib/model";
-import { callService,purchases } from "../drink-maker/client";
+import { callService, purchases } from "../drink-maker/client";
 import { Page, T, Button, ErrorText } from "../components/ui";
 export default function Pro() {
   const store = useStore();

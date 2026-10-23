@@ -1,2 +1,78 @@
-import React,{useState} from 'react';import {View} from 'react-native';import {useStore} from '../state/store';import {T,Button,Input,ErrorText} from './ui';import {startCutback,caffeineLimit} from '../features/cutback';
-export function CutbackControls(){const store=useStore(),p=store.settings.cutback,[goal,setGoal]=useState(p?String(p.goal):''),[error,setError]=useState('');return <View style={{gap:12}}><T size={22} bold>Caffeine cut-back</T>{p?<><T>Started {p.started}. Recorded starting average: {+p.baseline.toFixed(1)} mg. Current limit: {+caffeineLimit(store.settings,store.entries).toFixed(1)} mg. Goal: {p.goal} mg.</T><T muted>{p.completed.length} completed days. Each seven recorded days lowers the plan by 25 mg. Unlogged days hold the pace; progress never resets.</T><Button secondary title="Mark today complete with no more caffeine" onPress={()=>{const day=new Date();const key=`${day.getFullYear()}-${String(day.getMonth()+1).padStart(2,'0')}-${String(day.getDate()).padStart(2,'0')}`;void store.saveSettings({...store.settings,cutback:{...p,completed:[...new Set([...p.completed,key])]}}).catch(e=>setError(e.message));}}/></>:<><Input numeric label="Your caffeine goal (mg)" value={goal} onChangeText={setGoal}/><Button title="Start from my real average" onPress={()=>{try{const cutback=startCutback(store.entries,Number(goal));void store.saveSettings({...store.settings,cutback}).catch(e=>setError(e.message));}catch(e){setError((e as Error).message);}}}/><T muted>Uses complete logged days from the previous seven days. Keep logging; missed days extend the plan.</T></>}<ErrorText error={error}/></View>;}
+import React, { useState } from "react";
+import { View } from "react-native";
+import { useStore } from "../state/store";
+import { T, Button, Input, ErrorText } from "./ui";
+import { startCutback, caffeineLimit } from "../features/cutback";
+export function CutbackControls() {
+  const store = useStore(),
+    p = store.settings.cutback,
+    [goal, setGoal] = useState(p ? String(p.goal) : ""),
+    [error, setError] = useState("");
+  return (
+    <View style={{ gap: 12 }}>
+      <T size={22} bold>
+        Caffeine cut-back
+      </T>
+      {p ? (
+        <>
+          <T>
+            Started {p.started}. Recorded starting average:{" "}
+            {+p.baseline.toFixed(1)} mg. Current limit:{" "}
+            {+caffeineLimit(store.settings, store.entries).toFixed(1)} mg. Goal:{" "}
+            {p.goal} mg.
+          </T>
+          <T muted>
+            {p.completed.length} completed days. Each seven recorded days lowers
+            the plan by 25 mg. Unlogged days hold the pace; progress never
+            resets.
+          </T>
+          <Button
+            secondary
+            title="Mark today complete with no more caffeine"
+            onPress={() => {
+              const day = new Date();
+              const key = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`;
+              void store
+                .saveSettings({
+                  ...store.settings,
+                  cutback: {
+                    ...p,
+                    completed: [...new Set([...p.completed, key])],
+                  },
+                })
+                .catch((e) => setError(e.message));
+            }}
+          />
+        </>
+      ) : (
+        <>
+          <Input
+            numeric
+            label="Your caffeine goal (mg)"
+            value={goal}
+            onChangeText={setGoal}
+          />
+          <Button
+            title="Start from my real average"
+            onPress={() => {
+              try {
+                if(!goal.trim())throw Error("Enter your caffeine goal first.");
+                const cutback = startCutback(store.entries, Number(goal));
+                void store
+                  .saveSettings({ ...store.settings, cutback })
+                  .catch((e) => setError(e.message));
+              } catch (e) {
+                setError((e as Error).message);
+              }
+            }}
+          />
+          <T muted>
+            Uses complete logged days from the previous seven days. Keep
+            logging; missed days extend the plan.
+          </T>
+        </>
+      )}
+      <ErrorText error={error} />
+    </View>
+  );
+}

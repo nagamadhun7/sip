@@ -116,7 +116,11 @@ export function progress(
   settings: Settings,
   day = localDay(),
 ) {
-  settings={...settings,water:situationTarget(settings,day),caffeine:caffeineLimit(settings,entries,day)};
+  settings = {
+    ...settings,
+    water: situationTarget(settings, day),
+    caffeine: caffeineLimit(settings, entries, day),
+  };
   const rows = onDay(entries, day),
     sum = totals(rows),
     key = settings.focus;

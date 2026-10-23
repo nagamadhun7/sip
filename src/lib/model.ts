@@ -33,10 +33,10 @@ export type Entry = {
 };
 export type Settings = {
   locale?: import("../features/locale").AppLocale;
-  alcohol?: {limit:number;grams:number;freeDays:string[]};
+  alcohol?: { limit: number; grams: number; freeDays: string[] };
   cutback?: import("../features/cutback").Cutback;
   situation?: import("../features/situations").Situation;
-  comparison?: [string,string];
+  comparison?: [string, string];
   reminderPreferences?: import("./reminder-plan").ReminderPreferences;
   aiAccess?: {
     pro: boolean;

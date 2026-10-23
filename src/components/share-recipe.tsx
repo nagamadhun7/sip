@@ -1,2 +1,70 @@
-import React,{useState,useRef} from 'react';import {View} from 'react-native';import Svg,{SvgXml} from 'react-native-svg';import {File,Paths} from 'expo-file-system';import * as Sharing from 'expo-sharing';import type {Drink} from '../lib/model';import {recipeCard} from '../features/recipe-card';import {Button,ErrorText} from './ui';
-export function ShareRecipe({drink}:{drink:Drink}){const [open,setOpen]=useState(false),[error,setError]=useState(''),[busy,setBusy]=useState(false),ref=useRef<Svg|null>(null),card=recipeCard(drink);return <View style={{gap:8}}><Button secondary title={open?'Hide recipe card':'Share recipe card'} onPress={()=>setOpen(!open)}/>{open?<><SvgXml xml={card.xml} width="100%" height={card.height/3.6} override={{ref,width:"100%",height:card.height/3.6}}/><Button title="Share image" disabled={busy} onPress={()=>{setBusy(true);setError('');void (async()=>{if(!await Sharing.isAvailableAsync())throw Error('Sharing is unavailable on this device.');const base64=await new Promise<string>((resolve,reject)=>{const timeout=setTimeout(()=>reject(Error('Could not render the card. Retry.')),10000);ref.current?.toDataURL(data=>{clearTimeout(timeout);resolve(data);},{width:1080,height:card.height});});const file=new File(Paths.cache,'Sip-recipe.png');file.create({overwrite:true});await file.write(base64,{encoding:'base64'});await Sharing.shareAsync(file.uri,{mimeType:'image/png',UTI:'public.png',dialogTitle:'Share recipe card'});})().catch(e=>setError(e.message)).finally(()=>setBusy(false));}}/></>:null}<ErrorText error={error}/></View>;}
+import React, { useState, useRef } from "react";
+import { View } from "react-native";
+import Svg, { SvgXml } from "react-native-svg";
+import { File, Paths } from "expo-file-system";
+import * as Sharing from "expo-sharing";
+import type { Drink } from "../lib/model";
+import { recipeCard } from "../features/recipe-card";
+import { Button, ErrorText } from "./ui";
+export function ShareRecipe({ drink }: { drink: Drink }) {
+  const [open, setOpen] = useState(false),
+    [error, setError] = useState(""),
+    [busy, setBusy] = useState(false),
+    ref = useRef<Svg | null>(null),
+    card = recipeCard(drink);
+  return (
+    <View style={{ gap: 8 }}>
+      <Button
+        secondary
+        title={open ? "Hide recipe card" : "Share recipe card"}
+        onPress={() => setOpen(!open)}
+      />
+      {open ? (
+        <>
+          <SvgXml
+            xml={card.xml}
+            width="100%"
+            height={card.height / 3.6}
+            override={{ ref, width: "100%", height: card.height / 3.6 }}
+          />
+          <Button
+            title="Share image"
+            disabled={busy}
+            onPress={() => {
+              setBusy(true);
+              setError("");
+              void (async () => {
+                if (!(await Sharing.isAvailableAsync()))
+                  throw Error("Sharing is unavailable on this device.");
+                const base64 = await new Promise<string>((resolve, reject) => {
+                  const timeout = setTimeout(
+                    () => reject(Error("Could not render the card. Retry.")),
+                    10000,
+                  );
+                  ref.current?.toDataURL(
+                    (data) => {
+                      clearTimeout(timeout);
+                      resolve(data);
+                    },
+                    { width: 1080, height: card.height },
+                  );
+                });
+                const file = new File(Paths.cache, "Sip-recipe.png");
+                file.create({ overwrite: true });
+                await file.write(base64, { encoding: "base64" });
+                await Sharing.shareAsync(file.uri, {
+                  mimeType: "image/png",
+                  UTI: "public.png",
+                  dialogTitle: "Share recipe card",
+                });
+              })()
+                .catch((e) => setError(e.message))
+                .finally(() => setBusy(false));
+            }}
+          />
+        </>
+      ) : null}
+      <ErrorText error={error} />
+    </View>
+  );
+}

@@ -7,7 +7,11 @@ import { localDay, onDay, totals, formatVolume } from "../lib/model";
 import { Page, T, Bar, colors } from "../components/ui";
 export default function Balance() {
   const { entries, settings: baseSettings } = useStore(),
-    settings={...baseSettings,water:situationTarget(baseSettings),caffeine:caffeineLimit(baseSettings,entries)},
+    settings = {
+      ...baseSettings,
+      water: situationTarget(baseSettings),
+      caffeine: caffeineLimit(baseSettings, entries),
+    },
     sum = totals(onDay(entries, localDay()));
   return (
     <Page>

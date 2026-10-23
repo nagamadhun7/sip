@@ -2,7 +2,7 @@ import { AccessiblePressable as Pressable } from "../components/accessible-press
 import { ShareRecipe } from "../components/share-recipe";
 import { alcoholAllowed, isAlcohol } from "../features/alcohol";
 import React, { useRef, useState } from "react";
-import { FlatList, View,  StyleSheet } from "react-native";
+import { FlatList, View, StyleSheet } from "react-native";
 import { router } from "expo-router";
 import { DrinkIcon } from "../components/drink-icon";
 import { useStore } from "../state/store";
@@ -46,7 +46,9 @@ export default function MyDrinks() {
       contentInsetAdjustmentBehavior="automatic"
       keyboardShouldPersistTaps="handled"
       contentContainerStyle={{ padding: 24, gap: 16, paddingBottom: 40 }}
-      data={store.library.filter(d=>!isAlcohol(d)||alcoholAllowed(store.settings))}
+      data={store.library.filter(
+        (d) => !isAlcohol(d) || alcoholAllowed(store.settings),
+      )}
       keyExtractor={(d) => d.id}
       ListHeaderComponent={
         <View style={{ gap: 16 }}>

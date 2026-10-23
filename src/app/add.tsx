@@ -14,8 +14,10 @@ export default function Add() {
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false),
     [query, setQuery] = useState("");
-  const list = catalogDrinks(library, catalog).filter((d) =>
-    (!isAlcohol(d)||alcoholAllowed(settings))&&d.name.toLowerCase().includes(query.toLowerCase()),
+  const list = catalogDrinks(library, catalog).filter(
+    (d) =>
+      (!isAlcohol(d) || alcoholAllowed(settings)) &&
+      d.name.toLowerCase().includes(query.toLowerCase()),
   );
   return (
     <FlatList
@@ -31,7 +33,13 @@ export default function Add() {
           </T>
           <LogInput />
           <CompareDrinks />
-          <Button secondary title="Photograph a drink" onPress={()=>router.push({pathname:"/scan",params:{recognize:"1"}})} />
+          <Button
+            secondary
+            title="Photograph a drink"
+            onPress={() =>
+              router.push({ pathname: "/scan", params: { recognize: "1" } })
+            }
+          />
           <Input
             label="Search drinks"
             value={query}

@@ -1,6 +1,8 @@
+import { situationTarget } from "../features/situations";
+import { caffeineLimit } from "../features/cutback";
 import { AccessiblePressable as Pressable } from "../components/accessible-pressable";
 import React, { useState } from "react";
-import { View, ScrollView, } from "react-native";
+import { View, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useStore } from "../state/store";
@@ -16,6 +18,7 @@ export default function Week() {
   const days = lastDays(7, end),
     daily = days.map((d) => totals(onDay(entries, d))),
     max = Math.max(settings.water, ...daily.map((d) => d.water));
+  const targetFor=(key:"water"|"caffeine"|"sugar"|"sodium"|"potassium",day:string)=>key==="water"?situationTarget(settings,day):key==="caffeine"?caffeineLimit(settings,entries,day):settings[key];
   function changeWeek(next: number) {
     setOffset(next);
     const endDate = new Date();
@@ -70,7 +73,15 @@ export default function Week() {
           </T>
           <T muted>average per calendar day</T>
         </View>
-        <ScrollView horizontal accessibilityLabel="Weekly intake chart" contentContainerStyle={{minWidth:380,gap:12,alignItems:"flex-end",paddingBottom:10}}
+        <ScrollView
+          horizontal
+          accessibilityLabel="Weekly intake chart"
+          contentContainerStyle={{
+            minWidth: 380,
+            gap: 12,
+            alignItems: "flex-end",
+            paddingBottom: 10,
+          }}
           style={{
             flexDirection: "row",
             gap: 12,
@@ -82,7 +93,7 @@ export default function Week() {
             <Pressable
               key={day}
               onPress={() => setSelected(day)}
-              accessibilityState={{selected:day===selected}}
+              accessibilityState={{ selected: day === selected }}
               accessibilityLabel={`${day}: ${formatVolume(daily[index].water, settings.units)}`}
               style={{
                 flex: 1,
@@ -101,7 +112,8 @@ export default function Week() {
                 }}
               />
               <T size={12} muted>
-                {day===selected?"✓ ":""}{new Date(day + "T12:00:00").toLocaleDateString([], {
+                {day === selected ? "✓ " : ""}
+                {new Date(day + "T12:00:00").toLocaleDateString([], {
                   weekday: "short",
                 })}
               </T>
@@ -146,8 +158,8 @@ export default function Week() {
                       onDay(entries, days[i]).length > 0 &&
                       (k === "water" || d.missing[k] === 0) &&
                       (k === "water" || k === "potassium"
-                        ? d[k] >= settings[k]
-                        : d[k] <= settings[k]),
+                        ? d[k] >= targetFor(k,days[i])
+                        : d[k] <= targetFor(k,days[i])),
                   ).length
                 }{" "}
                 of 7 days recorded{" "}

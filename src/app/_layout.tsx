@@ -55,7 +55,7 @@ export default function Layout() {
           />
           <Stack.Screen
             name="add"
-            options={{ title: "Add a drink", presentation: "modal" }}
+            options={{ title: "Add a drink", presentation: "modal",headerRight:()=> <Pressable accessibilityLabel="Close Add a drink" onPress={()=>router.back()}><T>Close</T></Pressable> }}
           />
           <Stack.Screen
             name="drink-maker"

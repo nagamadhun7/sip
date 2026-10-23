@@ -12,7 +12,9 @@ export const reviewRows = (
   rows.map((row) => ({
     ...row,
     portion: String(
-      +(row.amount_ml / (units === "oz" ? regionalOunce(getLocale()) : 1)).toFixed(3),
+      +(
+        row.amount_ml / (units === "oz" ? regionalOunce(getLocale()) : 1)
+      ).toFixed(3),
     ),
   }));
 
@@ -29,7 +31,8 @@ export function reviewEntries(
       amount_ml:
         Number(row.portion) === Number(reviewRows([row], units)[0].portion)
           ? row.amount_ml
-          : Number(row.portion) * (units === "oz" ? regionalOunce(getLocale()) : 1),
+          : Number(row.portion) *
+            (units === "oz" ? regionalOunce(getLocale()) : 1),
     })),
     catalog,
     newId,
