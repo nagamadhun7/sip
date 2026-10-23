@@ -1,3 +1,4 @@
+import { dailyLimitNotices } from "../features/daily-limits";
 import { alcoholAllowed, isAlcohol } from "../features/alcohol";
 import { pinnedDrinks } from "../features/history";
 import { AccessiblePressable as Pressable } from "../components/accessible-pressable";
@@ -28,6 +29,7 @@ export default function Today() {
     safe = useSafeAreaInsets();
   const [error, setError] = useState(""),
     [pending, setPending] = useState(false),
+    [showAllRecent, setShowAllRecent] = useState(false),
     day = useToday();
   const { fontScale } = useWindowDimensions();
   const lock = useRef(false);
@@ -49,7 +51,9 @@ export default function Today() {
     ),
   ];
   if (!settings.onboarded) return <Redirect href="/onboarding" />;
-  const today = onDay(entries, day),
+  const today = onDay(entries, day).sort(
+      (a, b) => Date.parse(b.at) - Date.parse(a.at),
+    ),
     sum = totals(today);
   const quick = async (index: number) => {
     if (lock.current) return;
@@ -341,6 +345,35 @@ export default function Today() {
             </Pressable>
           ))}
         </View>
+        <View style={{ gap: 8 }}>
+          {dailyLimitNotices(sum, settings).map((notice) => (
+            <View
+              key={notice.key}
+              accessibilityRole={notice.over ? "alert" : undefined}
+              style={{
+                borderLeftWidth: 3,
+                borderColor: notice.over ? "#B34B32" : "#6FAEE8",
+                paddingLeft: 12,
+                paddingVertical: 5,
+                gap: 4,
+              }}
+            >
+              <T
+                size={14}
+                bold={notice.over}
+                style={notice.over ? { color: "#913E2B" } : undefined}
+              >
+                {notice.over ? "Above limit · " : ""}
+                {notice.text}
+              </T>
+              {notice.detail ? (
+                <T size={12} muted>
+                  {notice.detail}
+                </T>
+              ) : null}
+            </View>
+          ))}
+        </View>
         <View style={{ gap: 10, alignSelf: "stretch" }}>
           <T size={13} muted>
             Quick add
@@ -402,7 +435,7 @@ export default function Today() {
         </View>
         <View>
           <AlcoholControls summary />
-          {today.map((e) => (
+          {(showAllRecent ? today : today.slice(0, 3)).map((e) => (
             <Row
               key={e.id}
               title={e.drink.name}
@@ -417,6 +450,19 @@ export default function Today() {
               }
             />
           ))}
+          {today.length > 3 ? (
+            <Pressable
+              accessibilityState={{ expanded: showAllRecent }}
+              onPress={() => setShowAllRecent(!showAllRecent)}
+              style={{ paddingVertical: 12 }}
+            >
+              <T size={13} bold>
+                {showAllRecent
+                  ? "Show fewer drinks"
+                  : `Show all ${today.length} drinks`}
+              </T>
+            </Pressable>
+          ) : null}
         </View>
         <ErrorText error={error} />
         {undoLabel ? (
