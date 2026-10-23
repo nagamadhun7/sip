@@ -1,3 +1,4 @@
+import { WeeklyDrinkStory } from "../components/weekly-drink-story";
 import { HistoryExplorer } from "../components/history-explorer";
 import { situationTarget } from "../features/situations";
 import { caffeineLimit } from "../features/cutback";
@@ -97,9 +98,7 @@ export default function Week() {
                 <T>›</T>
               </Pressable>
             </View>
-            {!entries.some((e) => days.includes(localDay(e.at))) ? (
-              <T muted>No drinks logged in this period.</T>
-            ) : null}
+            <WeeklyDrinkStory end={end} completeLastDay={offset < 0} />
             <View>
               <T size={52} bold>
                 {formatVolume(data.water / 7, settings.units)}
