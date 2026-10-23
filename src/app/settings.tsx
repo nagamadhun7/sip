@@ -1,3 +1,5 @@
+import { HydrationAdjustmentControls } from "../components/hydration-adjustment-controls";
+import { ConditionControls } from "../components/condition-controls";
 import { LanguageControls } from "../components/language-controls";
 import { AlcoholControls } from "../components/alcohol-controls";
 import { CutbackControls } from "../components/cutback-controls";
@@ -103,8 +105,14 @@ export default function SettingsScreen() {
       <SettingsSection title="Language and region">
         <LanguageControls />
       </SettingsSection>
+      <SettingsSection title="Conditions and diets">
+        <ConditionControls />
+      </SettingsSection>
       <SettingsSection title="Situation mode">
         <SituationControls />
+      </SettingsSection>
+      <SettingsSection title="Hot weather and exercise">
+        <HydrationAdjustmentControls />
       </SettingsSection>
       <SettingsSection title="Caffeine cut-back">
         <CutbackControls />

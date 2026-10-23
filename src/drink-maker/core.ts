@@ -522,7 +522,7 @@ export function buildContext(
   const [h, m] = settings.bedtime.split(":").map(Number);
   bed.setHours(h, m, 0, 0);
   if (bed <= now) bed.setDate(bed.getDate() + 1);
-  const profile = { ...defaultProfile, ...settings.makerProfile };
+  const profile = { ...defaultProfile, ...settings.makerProfile, ...(settings.trackingHelper === "pregnancy" ? {pregnant:true} : {}) };
   const cap = ["unknown", "under18"].includes(profile.age_band)
     ? 0
     : !profile.medical_plan && (profile.pregnant || profile.nursing)

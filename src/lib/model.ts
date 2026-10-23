@@ -36,6 +36,8 @@ export type Entry = {
   health?: { platform: "ios" | "android"; id: string };
 };
 export type Settings = {
+  hydrationAdjustments?: import("../features/hydration-adjustments").HydrationAdjustments;
+  trackingHelper?: import("../features/conditions").TrackingHelper;
   drinkGoals?: import("../features/drink-goals").DrinkGoal[];
   favoriteDrinkIds?: string[];
   dailyNotes?: Record<string, string>;

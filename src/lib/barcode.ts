@@ -55,6 +55,7 @@ export function parseProduct(barcode: string, product: any): Drink {
       potassium: number("potassium_100g", 1000),
     },
     extraNutrition: {
+      carbs: number("carbohydrates_100g"),
       added_sugar: number("added-sugars_100g"),
       calcium: number("calcium_100g", 1000),
       vitamin_d: number("vitamin-d_100g", 1000000),

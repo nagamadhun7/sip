@@ -125,7 +125,7 @@ export default function DrinkMaker() {
   const generation = useRef<AbortController | null>(null),
     saveLock = useRef(false),
     variation = useRef(0);
-  const profile = { ...defaultProfile, ...store.settings.makerProfile };
+  const profile = { ...defaultProfile, ...store.settings.makerProfile, ...(store.settings.trackingHelper === "pregnancy" ? {pregnant:true} : {}) };
   useEffect(() => () => generation.current?.abort(), []);
   const parts = recipe.ingredients;
   const recipeTotals = calculate(parts);

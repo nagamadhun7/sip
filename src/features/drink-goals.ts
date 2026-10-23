@@ -1,9 +1,15 @@
 import type { Drink, Entry, Settings } from "../lib/model.ts";
 import { localDay } from "../lib/model.ts";
 import { isAlcohol, standardDrinks } from "./alcohol.ts";
-export const extraNutrients = ["added_sugar", "calcium", "vitamin_d"] as const;
+export const extraNutrients = [
+  "added_sugar",
+  "calcium",
+  "vitamin_d",
+  "carbs",
+] as const;
 export type ExtraNutrient = (typeof extraNutrients)[number];
 export type GoalKey =
+  | "carbs"
   | "plain_water"
   | "caffeine"
   | "added_sugar"
@@ -21,6 +27,7 @@ export type DrinkGoal = {
   visible: boolean;
 };
 export const goalLabels: Record<GoalKey, string> = {
+  carbs: "Carbohydrate",
   plain_water: "Plain water",
   caffeine: "Caffeine",
   added_sugar: "Added sugar",
@@ -33,6 +40,7 @@ export const goalLabels: Record<GoalKey, string> = {
 };
 export function initialGoals(s: Settings): DrinkGoal[] {
   return [
+    { key: "carbs", kind: "limit", amount: null, unit: "g", visible: false },
     {
       key: "plain_water",
       kind: "target",
@@ -113,7 +121,8 @@ export function validateGoals(goals: DrinkGoal[]) {
     const template = expected.find((x) => x.key === g.key);
     if (
       !template ||
-      g.kind !== template.kind ||
+      (g.key !== "potassium" && g.kind !== template.kind) ||
+      !["target", "limit"].includes(g.kind) ||
       g.unit !== template.unit ||
       typeof g.visible !== "boolean" ||
       (g.amount !== null &&
@@ -128,7 +137,9 @@ export function validateGoals(goals: DrinkGoal[]) {
   }
 }
 export function goalsForSettings(s: Settings): DrinkGoal[] {
-  const saved = s.drinkGoals ?? initialGoals(s);
+  const saved = initialGoals(s).map(
+    (g) => s.drinkGoals?.find((x) => x.key === g.key) ?? g,
+  );
   return saved.map((g) => ({
     ...g,
     amount:
@@ -137,7 +148,9 @@ export function goalsForSettings(s: Settings): DrinkGoal[] {
         : g.key === "sodium"
           ? s.sodium
           : g.key === "potassium"
-            ? s.potassium
+            ? s.trackingHelper === "kidney" || g.kind === "limit"
+              ? g.amount
+              : s.potassium
             : g.key === "alcohol"
               ? (s.alcohol?.limit ?? g.amount)
               : g.amount,
@@ -198,7 +211,9 @@ export function drinkDayTotals(entries: Entry[], s: Settings) {
       else
         value = extraNutrients.includes(key as ExtraNutrient)
           ? (e.drink.extraNutrition?.[key as ExtraNutrient] ??
-            (key === "added_sugar" && isPlainWater(e.drink) ? 0 : null))
+            (["added_sugar", "carbs"].includes(key) && isPlainWater(e.drink)
+              ? 0
+              : null))
           : e.drink.nutrition[
               key as "caffeine" | "potassium" | "sodium" | "calories"
             ];

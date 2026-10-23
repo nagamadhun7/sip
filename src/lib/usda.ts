@@ -53,6 +53,7 @@ export function parseUSDA(barcode: string, food: any): Drink | null {
     color: "#8AB5C7",
     nutrition,
     extraNutrition: {
+      carbs: labelAmount(labels.carbohydrates, ml),
       added_sugar: labelAmount(labels.addedSugar ?? labels.addedSugars, ml),
       calcium: labelAmount(labels.calcium, ml),
       vitamin_d: labelAmount(labels.vitaminD, ml),

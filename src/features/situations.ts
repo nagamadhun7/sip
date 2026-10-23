@@ -1,3 +1,7 @@
+import {
+  automaticAdjustment,
+  automaticBlocked,
+} from "./hydration-adjustments.ts";
 import type { Settings } from "../lib/model.ts";
 import { localDay } from "../lib/model.ts";
 export const situations = [
@@ -42,7 +46,13 @@ export function activeSituation(settings: Settings, day = localDay()) {
   return s && (s.mode === "fasting" || s.day === day) ? s : undefined;
 }
 export function situationTarget(settings: Settings, day = localDay()) {
-  return settings.water + (activeSituation(settings, day)?.extra_ml ?? 0);
+  return (
+    settings.water +
+    (automaticBlocked(settings)
+      ? 0
+      : (activeSituation(settings, day)?.extra_ml ?? 0) +
+        automaticAdjustment(settings, day).extra)
+  );
 }
 export function inEatingWindow(at: Date, s: Situation) {
   const n = at.getHours() * 60 + at.getMinutes(),

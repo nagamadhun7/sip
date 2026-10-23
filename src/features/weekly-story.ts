@@ -1,3 +1,4 @@
+import { goalFluid } from "./conditions.ts";
 import type { Entry, Settings } from "../lib/model.ts";
 import { lastDays, localDay, onDay, totals } from "../lib/model.ts";
 import { situationTarget } from "./situations.ts";
@@ -45,7 +46,7 @@ export function weeklyStory(
     days
       .map((day) => {
         const rows = onDay(current, day),
-          fluid = totals(rows).water,
+          fluid = goalFluid(rows, settings),
           target = situationTarget(settings, day);
         return {
           day,

@@ -1,3 +1,4 @@
+import { goalFluid } from "../features/conditions.ts";
 import { caffeineLimit } from "../features/cutback.ts";
 import { situationTarget } from "../features/situations.ts";
 import type { Entry, Settings, Drink } from "./model.ts";
@@ -126,15 +127,23 @@ export function progress(
     key = settings.focus;
   return {
     sum,
-    taken: sum[key],
+    taken: key === "water" ? goalFluid(rows, settings) : sum[key],
     target: settings[key],
     fraction:
-      settings[key] > 0 ? sum[key] / settings[key] : sum[key] > 0 ? 1 : 0,
-    left: Math.max(0, settings[key] - sum[key]),
+      settings[key] > 0
+        ? (key === "water" ? goalFluid(rows, settings) : sum[key]) /
+          settings[key]
+        : sum[key] > 0
+          ? 1
+          : 0,
+    left: Math.max(
+      0,
+      settings[key] - (key === "water" ? goalFluid(rows, settings) : sum[key]),
+    ),
     onTarget:
       rows.length > 0 &&
       (key === "water"
-        ? sum.water >= settings.water
+        ? goalFluid(rows, settings) >= settings.water
         : sum.missing[key] === 0 && sum[key] <= settings[key]),
   };
 }

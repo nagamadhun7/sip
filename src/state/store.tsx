@@ -1,3 +1,8 @@
+import {
+  configureWeatherService,
+  fetchWeather,
+  automaticBlocked,
+} from "../features/hydration-adjustments";
 import { AccessiblePressable as Pressable } from "../components/accessible-pressable";
 import { setLocale } from "../features/locale";
 import { requireAlcoholAccess } from "../features/alcohol";
@@ -9,7 +14,7 @@ import React, {
   useCallback,
 } from "react";
 import { ActivityIndicator, Text, View, AppState } from "react-native";
-import { Drink, Entry, Settings, defaults } from "../lib/model";
+import { Drink, Entry, Settings, defaults, localDay } from "../lib/model";
 import * as storage from "../lib/database";
 import { setReminders } from "../lib/reminders";
 import * as Notifications from "expo-notifications";
@@ -19,6 +24,8 @@ import {
   setHealthEnabled,
   stopHealth,
 } from "../health/service";
+import { callService } from "../drink-maker/client";
+if (!__DEV__) configureWeatherService((body) => callService("/weather", body));
 type State = Awaited<ReturnType<typeof storage.load>>;
 type Store = State & {
   saveEntry: (e: Entry) => Promise<void>;
@@ -81,6 +88,64 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       active = false;
     };
   }, []);
+  const refreshWeather = useCallback(async () => {
+    const { settings } = await storage.load();
+    const a = settings.hydrationAdjustments;
+    if (!a?.enabled || !a.city || automaticBlocked(settings)) return;
+    if (
+      a.weather?.city === a.city.name &&
+      a.weather.day === localDay() &&
+      Date.now() - Date.parse(a.weather.fetched_at) < 3600000
+    )
+      return;
+    try {
+      const weather = await fetchWeather(a);
+      const latest = await storage.load();
+      if (
+        latest.settings.hydrationAdjustments?.city?.name !== a.city.name ||
+        !latest.settings.hydrationAdjustments.enabled
+      )
+        return;
+      await storage.putSettings({
+        ...latest.settings,
+        hydrationAdjustments: {
+          ...latest.settings.hydrationAdjustments,
+          weather,
+          weather_error: undefined,
+        },
+      });
+    } catch {
+      const latest = await storage.load();
+      if (latest.settings.hydrationAdjustments?.city?.name !== a.city.name)
+        return;
+      await storage.putSettings({
+        ...latest.settings,
+        hydrationAdjustments: {
+          ...latest.settings.hydrationAdjustments!,
+          weather_error:
+            "Weather could not refresh. No previous-day forecast is used. Retry in Hot weather and exercise.",
+        },
+      });
+    }
+    await hydrate();
+  }, [hydrate]);
+  const weatherKey = JSON.stringify([
+    state.settings.hydrationAdjustments?.enabled,
+    state.settings.hydrationAdjustments?.city,
+    state.settings.trackingHelper,
+    state.settings.profile?.status,
+  ]);
+  useEffect(() => {
+    if (!ready) return;
+    void Promise.resolve()
+      .then(refreshWeather)
+      .catch(() => {});
+    const timer = setInterval(
+      () => void refreshWeather().catch(() => {}),
+      3600000,
+    );
+    return () => clearInterval(timer);
+  }, [ready, weatherKey, refreshWeather]);
   const entriesKey = JSON.stringify(state.entries);
   const reminderKey = JSON.stringify([
     state.entries,
@@ -88,6 +153,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     state.settings.reminderPreferences,
     state.settings.reminderHours,
     state.settings.situation,
+    state.settings.hydrationAdjustments,
+    state.settings.trackingHelper,
+    state.settings.profile?.status,
     state.settings.bedtime,
     state.settings.water,
   ]);
@@ -105,6 +173,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const sub = AppState.addEventListener("change", (status) => {
       if (status === "active") {
+        void refreshWeather().catch(() => {});
         void syncHealth().then(hydrate, hydrate);
         void storage
           .load()
@@ -115,7 +184,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       }
     });
     return () => sub.remove();
-  }, [hydrate]);
+  }, [hydrate, refreshWeather]);
   const value: Store = {
     ...state,
     serviceError: error,

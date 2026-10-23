@@ -1,3 +1,5 @@
+import { goalsForSettings } from "../features/drink-goals";
+import { goalFluid, fastingEnabled } from "../features/conditions";
 import { WeeklyDrinkStory } from "../components/weekly-drink-story";
 import { HistoryExplorer } from "../components/history-explorer";
 import { situationTarget } from "../features/situations";
@@ -29,13 +31,18 @@ export default function Week() {
       ? situationTarget(settings, day)
       : key === "caffeine"
         ? caffeineLimit(settings, entries, day)
-        : settings[key];
+        : key === "potassium"
+          ? (potGoal.amount ?? 0)
+          : settings[key];
   function changeWeek(next: number) {
     setOffset(next);
     const endDate = new Date();
     endDate.setDate(endDate.getDate() + next * 7);
     setSelected(localDay(endDate));
   }
+  const potGoal = goalsForSettings(settings).find(
+    (g) => g.key === "potassium",
+  )!;
   const data = totals(entries.filter((e) => days.includes(localDay(e.at))));
   return (
     <View style={{ flex: 1, backgroundColor: "white", paddingTop: safe.top }}>
@@ -151,56 +158,71 @@ export default function Week() {
                 </Pressable>
               ))}
             </ScrollView>
-            {(
-              ["water", "caffeine", "sugar", "sodium", "potassium"] as const
-            ).map((k) => (
-              <View key={k}>
-                <Row
-                  title={
-                    k === "water"
-                      ? "Fluid intake"
-                      : k[0].toUpperCase() + k.slice(1)
-                  }
-                  value={
-                    k === "water"
-                      ? formatVolume(data.water / 7, settings.units)
-                      : `${Math.round(data[k] / 7)} ${k === "sugar" ? "g" : "mg"}`
-                  }
-                />
-                <Bar
-                  value={
-                    settings[k] > 0
-                      ? data[k] / 7 / settings[k]
-                      : data[k] > 0
-                        ? 1
-                        : 0
-                  }
-                  color={
-                    k === "sugar"
-                      ? colors.peach
-                      : k === "caffeine"
-                        ? colors.brown
-                        : colors.blue
-                  }
-                />
-                <T size={12} muted>
-                  {
-                    daily.filter(
-                      (d, i) =>
-                        onDay(entries, days[i]).length > 0 &&
-                        (k === "water" || d.missing[k] === 0) &&
-                        (k === "water" || k === "potassium"
-                          ? d[k] >= targetFor(k, days[i])
-                          : d[k] <= targetFor(k, days[i])),
-                    ).length
-                  }{" "}
-                  of 7 days recorded{" "}
-                  {k === "water" || k === "potassium"
-                    ? "reached target"
-                    : "at or under limit"}
-                </T>
-              </View>
-            ))}
+            {(["water", "caffeine", "sugar", "sodium", "potassium"] as const)
+              .filter((k) => k !== "potassium" || potGoal.amount !== null)
+              .map((k) => (
+                <View key={k}>
+                  <Row
+                    title={
+                      k === "water"
+                        ? "Fluid intake"
+                        : k[0].toUpperCase() + k.slice(1)
+                    }
+                    value={
+                      k === "water"
+                        ? formatVolume(data.water / 7, settings.units)
+                        : `${Math.round(data[k] / 7)} ${k === "sugar" ? "g" : "mg"}`
+                    }
+                  />
+                  <Bar
+                    value={
+                      targetFor(k, days[0]) > 0
+                        ? (k === "water"
+                            ? goalFluid(
+                                entries.filter((e) =>
+                                  days.includes(localDay(e.at)),
+                                ),
+                                settings,
+                              )
+                            : data[k]) /
+                          days.reduce((n, day) => n + targetFor(k, day), 0)
+                        : data[k] > 0
+                          ? 1
+                          : 0
+                    }
+                    color={
+                      k === "sugar"
+                        ? colors.peach
+                        : k === "caffeine"
+                          ? colors.brown
+                          : colors.blue
+                    }
+                  />
+                  <T size={12} muted>
+                    {k === "water" && fastingEnabled(settings)
+                      ? "Zero-calorie fluid goal: "
+                      : ""}
+                    {
+                      daily.filter(
+                        (d, i) =>
+                          onDay(entries, days[i]).length > 0 &&
+                          (k === "water" || d.missing[k] === 0) &&
+                          (k === "water"
+                            ? goalFluid(onDay(entries, days[i]), settings) >=
+                              targetFor(k, days[i])
+                            : k === "potassium" && potGoal.kind === "target"
+                              ? d[k] >= targetFor(k, days[i])
+                              : d[k] <= targetFor(k, days[i])),
+                      ).length
+                    }{" "}
+                    of 7 days recorded{" "}
+                    {k === "water" ||
+                    (k === "potassium" && potGoal.kind === "target")
+                      ? "reached target"
+                      : "at or under limit"}
+                  </T>
+                </View>
+              ))}
             <T size={20} bold>
               {new Date(selected + "T12:00:00").toLocaleDateString([], {
                 weekday: "long",

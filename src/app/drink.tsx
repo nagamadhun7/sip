@@ -463,7 +463,7 @@ export default function DrinkForm() {
         <Input
           key={k}
           numeric
-          label={`${{ added_sugar: "Added sugar", calcium: "Calcium", vitamin_d: "Vitamin D" }[k]} (${k === "added_sugar" ? "g" : k === "calcium" ? "mg" : "µg"} / 100 ml)`}
+          label={`${{ carbs: "Carbohydrate", added_sugar: "Added sugar", calcium: "Calcium", vitamin_d: "Vitamin D" }[k]} (${["added_sugar", "carbs"].includes(k) ? "g" : k === "calcium" ? "mg" : "µg"} / 100 ml)`}
           value={extra[k]}
           onChangeText={(value) =>
             setExtra((values) => ({ ...values, [k]: value }))

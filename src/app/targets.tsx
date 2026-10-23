@@ -77,7 +77,9 @@ export default function Targets() {
         sugar,
         caffeine: value("caffeine"),
         sodium: value("sodium"),
-        potassium: value("potassium"),
+        potassium:
+          updated.find((g) => g.key === "potassium")?.amount ??
+          settings.potassium,
         drinkGoals: updated,
         ...(alcoholAllowed(settings) && alcohol.amount !== null
           ? {

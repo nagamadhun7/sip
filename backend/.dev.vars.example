@@ -4,3 +4,6 @@ REVENUECAT_SECRET_KEY=
 SUPABASE_URL=
 SUPABASE_PUBLISHABLE_KEY=
 FDC_API_KEY=
+
+# Commercial weather service; never put this key in EXPO_PUBLIC_ variables.
+OPEN_METEO_API_KEY=

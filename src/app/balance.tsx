@@ -1,3 +1,5 @@
+import { goalFluid, fastingEnabled } from "../features/conditions";
+import { goalsForSettings } from "../features/drink-goals";
 import { caffeineLimit } from "../features/cutback";
 import { situationTarget } from "../features/situations";
 import React from "react";
@@ -21,10 +23,18 @@ export default function Balance() {
       ) : null}
       {(["water", "caffeine", "sugar", "sodium", "potassium"] as const).map(
         (k) => {
-          const target = settings[k],
-            value = sum[k],
-            remaining = target - value,
-            isLimit = ["sugar", "caffeine", "sodium"].includes(k),
+          const potGoal = goalsForSettings(baseSettings).find(
+              (g) => g.key === "potassium",
+            )!,
+            target = k === "potassium" ? potGoal.amount : settings[k],
+            value =
+              k === "water"
+                ? goalFluid(onDay(entries, localDay()), baseSettings)
+                : sum[k],
+            remaining = (target ?? 0) - value,
+            isLimit =
+              ["sugar", "caffeine", "sodium"].includes(k) ||
+              (k === "potassium" && potGoal.kind === "limit"),
             fmt = (v: number) =>
               k === "water"
                 ? formatVolume(v, settings.units)
@@ -33,18 +43,20 @@ export default function Balance() {
             <View key={k} style={{ gap: 5, paddingVertical: 8 }}>
               <T>
                 {k === "water"
-                  ? "Fluid intake"
+                  ? fastingEnabled(baseSettings)
+                    ? "Zero-calorie fluid"
+                    : "Fluid intake"
                   : k[0].toUpperCase() + k.slice(1)}
               </T>
               <T size={30} bold>
                 {fmt(value)}{" "}
                 <T size={14} muted>
-                  of {fmt(target)}
+                  {target === null ? "No limit set" : `of ${fmt(target)}`}
                   {isLimit ? " limit" : ""}
                 </T>
               </T>
               <Bar
-                value={target > 0 ? value / target : value > 0 ? 1 : 0}
+                value={target !== null && target > 0 ? value / target : 0}
                 color={
                   k === "sugar"
                     ? colors.peach
@@ -59,9 +71,11 @@ export default function Balance() {
                   color: remaining < 0 && isLimit ? "#B5532F" : colors.muted,
                 }}
               >
-                {remaining < 0
-                  ? `${fmt(-remaining)} ${isLimit ? "over" : "above target"}`
-                  : `${fmt(remaining)} ${isLimit ? "left" : "to go"}`}
+                {target === null
+                  ? "Set your own limit in Daily targets"
+                  : remaining < 0
+                    ? `${fmt(-remaining)} ${isLimit ? "over" : "above target"}`
+                    : `${fmt(remaining)} ${isLimit ? "left" : "to go"}`}
               </T>
               {k !== "water" && sum.missing[k] > 0 ? (
                 <T size={12} muted>

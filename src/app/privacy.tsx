@@ -37,6 +37,27 @@ export default function Privacy() {
         not require sign-in and does not upload your drink history to a server.
       </T>
       <T size={20} bold>
+        Weather and tracking helpers
+      </T>
+      <T>
+        Conditions, diet preferences, exercise logs and adjustment rules stay in
+        SQLite. Optional city search sends the city query and enabled weather
+        refresh sends selected city coordinates, not GPS location, drink logs or
+        health profile. Production requests pass through our authenticated
+        weather server to Open-Meteo. The server caches responses for an hour
+        and keeps daily lookup counts under your anonymous account ID.
+        Development builds can contact Open-Meteo directly. Providers receive
+        standard connection information. Forecasts are cached on this device and
+        refreshed while Sip is active. Tracking helpers are not medical advice.
+      </T>
+      <Button
+        secondary
+        title="Open-Meteo privacy policy"
+        onPress={() =>
+          void Linking.openURL("https://open-meteo.com/en/privacy")
+        }
+      />
+      <T size={20} bold>
         Barcode lookup
       </T>
       <T>

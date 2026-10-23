@@ -1,3 +1,6 @@
+import { adjustmentReason } from "../features/hydration-adjustments";
+import { fastingEnabled, goalFluid } from "../features/conditions";
+import { situationTarget } from "../features/situations";
 import React, { useState } from "react";
 import { View, ScrollView, useWindowDimensions } from "react-native";
 import { router } from "expo-router";
@@ -22,7 +25,7 @@ export function WaterHeadline() {
     goal = goalsForSettings(settings).find((g) => g.key === "plain_water")!;
   return (
     <Pressable
-      accessibilityLabel={`Plain water ${formatVolume(total.plainWater, settings.units)}, total fluid ${formatVolume(total.totalFluid, settings.units)}`}
+      accessibilityLabel={`Plain water ${formatVolume(total.plainWater, settings.units)}, total fluid ${formatVolume(total.totalFluid, settings.units)}${fastingEnabled(settings) ? `, zero-calorie fluid ${formatVolume(goalFluid(onDay(entries, day), settings), settings.units)} of ${formatVolume(situationTarget(settings, day), settings.units)} goal` : ""}`}
       onPress={() => router.push("/targets")}
       style={{ alignItems: "center", gap: 7, paddingTop: 12 }}
     >
@@ -46,6 +49,16 @@ export function WaterHeadline() {
           ? ` · ${total.plainWater >= goal.amount ? "Target reached" : formatVolume(goal.amount - total.plainWater, settings.units) + " to go"}`
           : ""}
       </T>
+      {fastingEnabled(settings) ? (
+        <T size={12} muted>
+          Zero-calorie fluid:{" "}
+          {formatVolume(
+            goalFluid(onDay(entries, day), settings),
+            settings.units,
+          )}{" "}
+          of {formatVolume(situationTarget(settings, day), settings.units)} goal
+        </T>
+      ) : null}
     </Pressable>
   );
 }
@@ -139,6 +152,11 @@ export function HomeDrinkGoals() {
       </Pressable>
       {details ? (
         <View style={{ gap: 14 }}>
+          {settings.hydrationAdjustments?.enabled ? (
+            <T size={12} muted>
+              {adjustmentReason(settings, day)}
+            </T>
+          ) : null}
           <T size={12} muted>
             Total sugar:{" "}
             {totals.totalSugar.amount === null

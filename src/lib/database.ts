@@ -1,3 +1,4 @@
+import { validateAdjustments } from "../features/hydration-adjustments";
 import { usdaCatalog } from "../data/usda-catalog";
 import {
   initialGoals,
@@ -35,7 +36,7 @@ CREATE TABLE IF NOT EXISTS undo_change(id INTEGER PRIMARY KEY CHECK(id=1),payloa
 CREATE TABLE IF NOT EXISTS profile(id INTEGER PRIMARY KEY CHECK(id=1),payload TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS journal_draft(id INTEGER PRIMARY KEY CHECK(id=1),text TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS goals(nutrient TEXT PRIMARY KEY NOT NULL,kind TEXT NOT NULL,amount REAL,unit TEXT NOT NULL,visible INTEGER NOT NULL);
-PRAGMA user_version=4;`);
+PRAGMA user_version=5;`);
     await d.withExclusiveTransactionAsync(async (tx) => {
       for (const ingredient of ingredientData.ingredients)
         await tx.runAsync(
@@ -67,6 +68,27 @@ PRAGMA user_version=4;`);
           drink.id,
           JSON.stringify(drink),
         );
+      for (const drink of usdaCatalog) {
+        const row = await tx.getFirstAsync<{ payload: string }>(
+          "SELECT payload FROM catalog WHERE id=?",
+          drink.id,
+        );
+        if (row) {
+          const saved = JSON.parse(row.payload);
+          if (saved.extraNutrition?.carbs === undefined)
+            await tx.runAsync(
+              "UPDATE catalog SET payload=? WHERE id=?",
+              JSON.stringify({
+                ...saved,
+                extraNutrition: {
+                  ...saved.extraNutrition,
+                  carbs: drink.extraNutrition?.carbs ?? null,
+                },
+              }),
+              drink.id,
+            );
+        }
+      }
       await tx.runAsync(
         "INSERT OR IGNORE INTO preferences(id,payload) VALUES(1,?)",
         JSON.stringify({
@@ -145,7 +167,7 @@ export async function load() {
     unit: string;
     visible: number;
   }>("SELECT * FROM goals");
-  if (!goals.length) {
+  if (goals.length < initialGoals(settings).length) {
     await d.withExclusiveTransactionAsync(async (tx) => {
       for (const g of initialGoals(settings))
         await tx.runAsync(
@@ -311,6 +333,7 @@ export async function putContainer(c: Container) {
 export async function putSettings(s: Settings) {
   const goals = goalsForSettings(s);
   validateGoals(goals);
+  if (s.hydrationAdjustments) validateAdjustments(s.hydrationAdjustments);
   const d = await db();
   await d.withExclusiveTransactionAsync(async (tx) => {
     for (const g of goals)

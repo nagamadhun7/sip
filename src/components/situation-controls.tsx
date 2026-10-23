@@ -1,3 +1,4 @@
+import { automaticBlocked } from "../features/hydration-adjustments";
 import React, { useState } from "react";
 import { View } from "react-native";
 import { useStore } from "../state/store";
@@ -88,7 +89,11 @@ export function SituationControls() {
       />
       {saved ? (
         <>
-          <T>{situationReason(saved)}</T>
+          <T>
+            {automaticBlocked(store.settings)
+              ? "Your kidney or medical plan keeps its saved fluid goal. Situation extra water is not added."
+              : situationReason(saved)}
+          </T>
           <Button
             secondary
             title="Turn off situation mode"

@@ -1,3 +1,4 @@
+import { weatherLookup } from "./weather";
 import { handlePhoto, generatePhoto } from "./photo";
 import { accessStatus } from "./access";
 import { handleParse, generateParsing } from "./parsing";
@@ -8,6 +9,7 @@ import { handleMaker, generateOpenAI, json } from "./service";
 import { foodLookup, searchUSDADrinks } from "./lookup";
 interface Env {
   FDC_API_KEY?: string;
+  OPEN_METEO_API_KEY?: string;
   MAKER_USERS: DurableObjectNamespace<MakerUser>;
   OPENAI_API_KEY: string;
   OPENAI_MODEL: string;
@@ -48,7 +50,9 @@ export class MakerUser extends DurableObject<Env> {
     }
     const env = this.env;
     if (
-      ["/food-lookup", "/drink-catalog"].includes(new URL(request.url).pathname)
+      ["/food-lookup", "/drink-catalog", "/weather"].includes(
+        new URL(request.url).pathname,
+      )
     ) {
       const day = new Date().toISOString().slice(0, 10);
       const usage = await this.ctx.storage.get<{ day: string; count: number }>(
@@ -61,6 +65,32 @@ export class MakerUser extends DurableObject<Env> {
           429,
         );
       await this.ctx.storage.put("lookup-usage", { day, count: count + 1 });
+      if (new URL(request.url).pathname === "/weather") {
+        const digest = await crypto.subtle.digest(
+          "SHA-256",
+          new TextEncoder().encode(JSON.stringify(body)),
+        );
+        const cacheKey =
+          "cache:weather:" +
+          Array.from(new Uint8Array(digest), (b) =>
+            b.toString(16).padStart(2, "0"),
+          ).join("");
+        const cached = await this.ctx.storage.get<{
+          expires: number;
+          data: unknown;
+        }>(cacheKey);
+        if (cached && cached.expires > Date.now()) return json(cached.data);
+        const response = await weatherLookup(body, env.OPEN_METEO_API_KEY);
+        if (response.ok) {
+          await this.ctx.storage.put(cacheKey, {
+            expires: Date.now() + 3600000,
+            data: await response.clone().json(),
+          });
+          if ((await this.ctx.storage.getAlarm()) === null)
+            await this.ctx.storage.setAlarm(Date.now() + 86400000);
+        }
+        return response;
+      }
       if (new URL(request.url).pathname === "/drink-catalog") {
         const query = (body as { query?: unknown })?.query;
         if (typeof query !== "string")
@@ -157,6 +187,7 @@ export default {
       ![
         "/drink-maker",
         "/food-lookup",
+        "/weather",
         "/drink-catalog",
         "/parse-drinks",
         "/photo-drinks",

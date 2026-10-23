@@ -1,3 +1,4 @@
+import { goalFluid } from "../features/conditions.ts";
 import {
   activeSituation,
   situationTarget,
@@ -5,7 +6,7 @@ import {
   clockMinutes,
 } from "../features/situations.ts";
 import type { Entry, Settings } from "./model.ts";
-import { localDay, onDay, totals } from "./model.ts";
+import { localDay, onDay } from "./model.ts";
 export type ReminderPreferences = {
   only_behind: boolean;
   per_drink: boolean;
@@ -71,7 +72,7 @@ export function planReminders(
     const mode = activeSituation(settings, localDay(at));
     if (mode?.mode === "fasting" && !inEatingWindow(at, mode)) return;
     const date = localDay(at),
-      sum = totals(onDay(entries, date));
+      taken = goalFluid(onDay(entries, date), settings);
     const wake =
         mode?.mode === "fasting"
           ? clockMinutes(mode.start)
@@ -84,7 +85,7 @@ export function planReminders(
     const elapsed = (at.getHours() * 60 + at.getMinutes() - wake + 1440) % 1440;
     const expected =
       situationTarget(settings, date) * Math.min(1, elapsed / span);
-    if (kind !== "caffeine" && p.only_behind && sum.water >= expected) return;
+    if (kind !== "caffeine" && p.only_behind && taken >= expected) return;
     const identifier = `sip:${date}:${kind}:${at.getHours()}:${at.getMinutes()}`;
     if (candidates.some((r) => r.id === identifier)) return;
     candidates.push({
