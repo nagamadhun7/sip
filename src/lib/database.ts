@@ -1,3 +1,9 @@
+import { usdaCatalog } from "../data/usda-catalog";
+import {
+  initialGoals,
+  goalsForSettings,
+  validateGoals,
+} from "../features/drink-goals";
 import { createWriteQueue } from "./write-queue";
 import { advanceCutback } from "../features/cutback";
 import { defaultReminderPreferences } from "./reminder-plan";
@@ -28,7 +34,8 @@ CREATE TABLE IF NOT EXISTS containers(id TEXT PRIMARY KEY NOT NULL,payload TEXT 
 CREATE TABLE IF NOT EXISTS undo_change(id INTEGER PRIMARY KEY CHECK(id=1),payload TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS profile(id INTEGER PRIMARY KEY CHECK(id=1),payload TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS journal_draft(id INTEGER PRIMARY KEY CHECK(id=1),text TEXT NOT NULL);
-PRAGMA user_version=3;`);
+CREATE TABLE IF NOT EXISTS goals(nutrient TEXT PRIMARY KEY NOT NULL,kind TEXT NOT NULL,amount REAL,unit TEXT NOT NULL,visible INTEGER NOT NULL);
+PRAGMA user_version=4;`);
     await d.withExclusiveTransactionAsync(async (tx) => {
       for (const ingredient of ingredientData.ingredients)
         await tx.runAsync(
@@ -36,7 +43,25 @@ PRAGMA user_version=3;`);
           ingredient.id,
           JSON.stringify(ingredient),
         );
-      for (const drink of seeds)
+      for (const ingredient of ingredientData.ingredients) {
+        const existing = await tx.getFirstAsync<{ payload: string }>(
+          "SELECT payload FROM ingredients WHERE id=?",
+          ingredient.id,
+        );
+        if (existing) {
+          const saved = JSON.parse(existing.payload);
+          if (!saved.extraNutrition)
+            await tx.runAsync(
+              "UPDATE ingredients SET payload=? WHERE id=?",
+              JSON.stringify({
+                ...saved,
+                extraNutrition: ingredient.extraNutrition,
+              }),
+              ingredient.id,
+            );
+        }
+      }
+      for (const drink of [...usdaCatalog, ...seeds])
         await tx.runAsync(
           "INSERT OR IGNORE INTO catalog(id,payload) VALUES(?,?)",
           drink.id,
@@ -52,9 +77,15 @@ PRAGMA user_version=3;`);
     });
     return new Proxy(d, {
       get(target, key) {
-        if (key === "runAsync")
+        if (
+          key === "runAsync" ||
+          key === "getAllAsync" ||
+          key === "getFirstAsync"
+        )
           return (...args: unknown[]) =>
-            enqueueWrite(() => Reflect.apply(target.runAsync, target, args));
+            enqueueWrite(() =>
+              Reflect.apply(Reflect.get(target, key), target, args),
+            );
         if (key === "withExclusiveTransactionAsync")
           return (body: (tx: SQLite.SQLiteDatabase) => Promise<void>) =>
             enqueueWrite(() =>
@@ -107,6 +138,34 @@ export async function load() {
     ...(pref ? JSON.parse(pref.payload) : {}),
     ...(profile ? { profile: JSON.parse(profile.payload) } : {}),
   } as Settings;
+  let goals = await d.getAllAsync<{
+    nutrient: string;
+    kind: string;
+    amount: number | null;
+    unit: string;
+    visible: number;
+  }>("SELECT * FROM goals");
+  if (!goals.length) {
+    await d.withExclusiveTransactionAsync(async (tx) => {
+      for (const g of initialGoals(settings))
+        await tx.runAsync(
+          "INSERT OR IGNORE INTO goals(nutrient,kind,amount,unit,visible) VALUES(?,?,?,?,?)",
+          g.key,
+          g.kind,
+          g.amount,
+          g.unit,
+          Number(g.visible),
+        );
+    });
+    goals = await d.getAllAsync("SELECT * FROM goals");
+  }
+  settings.drinkGoals = goals.map((g) => ({
+    key: g.nutrient,
+    kind: g.kind,
+    amount: g.amount,
+    unit: g.unit,
+    visible: !!g.visible,
+  })) as Settings["drinkGoals"];
   if (settings.cutback)
     settings.cutback = advanceCutback(
       settings.cutback,
@@ -250,8 +309,19 @@ export async function putContainer(c: Container) {
   );
 }
 export async function putSettings(s: Settings) {
+  const goals = goalsForSettings(s);
+  validateGoals(goals);
   const d = await db();
   await d.withExclusiveTransactionAsync(async (tx) => {
+    for (const g of goals)
+      await tx.runAsync(
+        "INSERT OR REPLACE INTO goals(nutrient,kind,amount,unit,visible) VALUES(?,?,?,?,?)",
+        g.key,
+        g.kind,
+        g.amount,
+        g.unit,
+        Number(g.visible),
+      );
     await tx.runAsync(
       "INSERT OR REPLACE INTO preferences(id,payload) VALUES(1,?)",
       JSON.stringify(s),
@@ -268,6 +338,7 @@ export async function erase() {
   await d.withExclusiveTransactionAsync(async (tx) => {
     for (const table of [
       "records",
+      "goals",
       "library",
       "preferences",
       "containers",

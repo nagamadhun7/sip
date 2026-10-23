@@ -19,7 +19,12 @@
       "dairy": false,
       "vegan": true,
       "alcohol": false,
-      "estimate": "Estimated"
+      "estimate": "Estimated",
+      "extraNutrition": {
+        "added_sugar": 0,
+        "calcium": null,
+        "vitamin_d": null
+      }
     },
     {
       "id": "cold-brew",
@@ -38,7 +43,12 @@
       "dairy": false,
       "vegan": true,
       "alcohol": false,
-      "estimate": "Estimated"
+      "estimate": "Estimated",
+      "extraNutrition": {
+        "added_sugar": 0,
+        "calcium": null,
+        "vitamin_d": null
+      }
     },
     {
       "id": "coffee",
@@ -57,7 +67,12 @@
       "dairy": false,
       "vegan": true,
       "alcohol": false,
-      "estimate": "Estimated"
+      "estimate": "Estimated",
+      "extraNutrition": {
+        "added_sugar": 0,
+        "calcium": null,
+        "vitamin_d": null
+      }
     },
     {
       "id": "black-tea",
@@ -76,7 +91,12 @@
       "dairy": false,
       "vegan": true,
       "alcohol": false,
-      "estimate": "Estimated"
+      "estimate": "Estimated",
+      "extraNutrition": {
+        "added_sugar": 0,
+        "calcium": null,
+        "vitamin_d": null
+      }
     },
     {
       "id": "green-tea",
@@ -95,7 +115,12 @@
       "dairy": false,
       "vegan": true,
       "alcohol": false,
-      "estimate": "Estimated"
+      "estimate": "Estimated",
+      "extraNutrition": {
+        "added_sugar": 0,
+        "calcium": null,
+        "vitamin_d": null
+      }
     },
     {
       "id": "milk",
@@ -114,7 +139,12 @@
       "dairy": true,
       "vegan": false,
       "alcohol": false,
-      "estimate": "Estimated"
+      "estimate": "Estimated",
+      "extraNutrition": {
+        "added_sugar": 0,
+        "calcium": null,
+        "vitamin_d": null
+      }
     },
     {
       "id": "oat-milk",
@@ -133,7 +163,12 @@
       "dairy": false,
       "vegan": true,
       "alcohol": false,
-      "estimate": "Estimated"
+      "estimate": "Estimated",
+      "extraNutrition": {
+        "added_sugar": 0,
+        "calcium": null,
+        "vitamin_d": null
+      }
     },
     {
       "id": "soy-milk",
@@ -152,7 +187,12 @@
       "dairy": false,
       "vegan": true,
       "alcohol": false,
-      "estimate": "Estimated"
+      "estimate": "Estimated",
+      "extraNutrition": {
+        "added_sugar": 0,
+        "calcium": null,
+        "vitamin_d": null
+      }
     },
     {
       "id": "almond-milk",
@@ -171,7 +211,12 @@
       "dairy": false,
       "vegan": true,
       "alcohol": false,
-      "estimate": "Estimated"
+      "estimate": "Estimated",
+      "extraNutrition": {
+        "added_sugar": 0,
+        "calcium": null,
+        "vitamin_d": null
+      }
     },
     {
       "id": "coconut-water",
@@ -190,7 +235,12 @@
       "dairy": false,
       "vegan": true,
       "alcohol": false,
-      "estimate": "Estimated"
+      "estimate": "Estimated",
+      "extraNutrition": {
+        "added_sugar": 0,
+        "calcium": null,
+        "vitamin_d": null
+      }
     },
     {
       "id": "orange-juice",
@@ -209,7 +259,12 @@
       "dairy": false,
       "vegan": true,
       "alcohol": false,
-      "estimate": "Estimated"
+      "estimate": "Estimated",
+      "extraNutrition": {
+        "added_sugar": 0,
+        "calcium": null,
+        "vitamin_d": null
+      }
     },
     {
       "id": "sparkling-water",
@@ -228,7 +283,12 @@
       "dairy": false,
       "vegan": true,
       "alcohol": false,
-      "estimate": "Estimated"
+      "estimate": "Estimated",
+      "extraNutrition": {
+        "added_sugar": 0,
+        "calcium": null,
+        "vitamin_d": null
+      }
     },
     {
       "id": "water",
@@ -247,7 +307,12 @@
       "dairy": false,
       "vegan": true,
       "alcohol": false,
-      "estimate": "Estimated"
+      "estimate": "Estimated",
+      "extraNutrition": {
+        "added_sugar": 0,
+        "calcium": null,
+        "vitamin_d": null
+      }
     },
     {
       "id": "ice",
@@ -266,7 +331,12 @@
       "dairy": false,
       "vegan": true,
       "alcohol": false,
-      "estimate": "Estimated"
+      "estimate": "Estimated",
+      "extraNutrition": {
+        "added_sugar": 0,
+        "calcium": null,
+        "vitamin_d": null
+      }
     },
     {
       "id": "vanilla-syrup",
@@ -285,7 +355,12 @@
       "dairy": false,
       "vegan": true,
       "alcohol": false,
-      "estimate": "Estimated"
+      "estimate": "Estimated",
+      "extraNutrition": {
+        "added_sugar": 5,
+        "calcium": null,
+        "vitamin_d": null
+      }
     },
     {
       "id": "caramel-syrup",
@@ -304,7 +379,12 @@
       "dairy": false,
       "vegan": true,
       "alcohol": false,
-      "estimate": "Estimated"
+      "estimate": "Estimated",
+      "extraNutrition": {
+        "added_sugar": 5,
+        "calcium": null,
+        "vitamin_d": null
+      }
     },
     {
       "id": "honey",
@@ -323,7 +403,12 @@
       "dairy": false,
       "vegan": false,
       "alcohol": false,
-      "estimate": "Estimated"
+      "estimate": "Estimated",
+      "extraNutrition": {
+        "added_sugar": 5.7,
+        "calcium": null,
+        "vitamin_d": null
+      }
     },
     {
       "id": "sugar",
@@ -342,7 +427,12 @@
       "dairy": false,
       "vegan": true,
       "alcohol": false,
-      "estimate": "Estimated"
+      "estimate": "Estimated",
+      "extraNutrition": {
+        "added_sugar": 4,
+        "calcium": null,
+        "vitamin_d": null
+      }
     },
     {
       "id": "lemon",
@@ -361,7 +451,12 @@
       "dairy": false,
       "vegan": true,
       "alcohol": false,
-      "estimate": "Estimated"
+      "estimate": "Estimated",
+      "extraNutrition": {
+        "added_sugar": 0,
+        "calcium": null,
+        "vitamin_d": null
+      }
     },
     {
       "id": "lime",
@@ -380,7 +475,12 @@
       "dairy": false,
       "vegan": true,
       "alcohol": false,
-      "estimate": "Estimated"
+      "estimate": "Estimated",
+      "extraNutrition": {
+        "added_sugar": 0,
+        "calcium": null,
+        "vitamin_d": null
+      }
     },
     {
       "id": "cocoa",
@@ -399,7 +499,12 @@
       "dairy": false,
       "vegan": true,
       "alcohol": false,
-      "estimate": "Estimated"
+      "estimate": "Estimated",
+      "extraNutrition": {
+        "added_sugar": 0,
+        "calcium": null,
+        "vitamin_d": null
+      }
     },
     {
       "id": "beer",
@@ -418,7 +523,12 @@
       "dairy": false,
       "vegan": false,
       "alcohol": true,
-      "estimate": "Estimated"
+      "estimate": "Estimated",
+      "extraNutrition": {
+        "added_sugar": null,
+        "calcium": null,
+        "vitamin_d": null
+      }
     },
     {
       "id": "wine",
@@ -437,7 +547,12 @@
       "dairy": false,
       "vegan": true,
       "alcohol": true,
-      "estimate": "Estimated"
+      "estimate": "Estimated",
+      "extraNutrition": {
+        "added_sugar": null,
+        "calcium": null,
+        "vitamin_d": null
+      }
     }
   ]
 }

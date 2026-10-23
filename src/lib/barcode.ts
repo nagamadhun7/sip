@@ -54,6 +54,11 @@ export function parseProduct(barcode: string, product: any): Drink {
       sodium: number("sodium_100g", 1000),
       potassium: number("potassium_100g", 1000),
     },
+    extraNutrition: {
+      added_sugar: number("added-sugars_100g"),
+      calcium: number("calcium_100g", 1000),
+      vitamin_d: number("vitamin-d_100g", 1000000),
+    },
     source: "Open Food Facts · confirm per-100-ml values against your label",
   };
 }

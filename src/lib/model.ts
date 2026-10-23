@@ -15,6 +15,10 @@ export type Drink = {
   color: string;
   serving: number;
   nutrition: Nutrition;
+  extraNutrition?: Partial<
+    Record<import("../features/drink-goals").ExtraNutrient, number | null>
+  >;
+  fluidType?: "plain-water" | "other";
   source: string;
   alcohol_abv?: number | null;
   barcode?: string;
@@ -32,6 +36,7 @@ export type Entry = {
   health?: { platform: "ios" | "android"; id: string };
 };
 export type Settings = {
+  drinkGoals?: import("../features/drink-goals").DrinkGoal[];
   favoriteDrinkIds?: string[];
   dailyNotes?: Record<string, string>;
   locale?: import("../features/locale").AppLocale;
@@ -109,6 +114,29 @@ export function totals(entries: Entry[]) {
   return result;
 }
 export function validateEntry(e: Entry) {
+  if (
+    e.drink.fluidType === "plain-water" &&
+    ((e.drink.nutrition.sugar ?? 0) > 0 ||
+      (e.drink.nutrition.caffeine ?? 0) > 0 ||
+      (e.drink.alcohol_abv ?? 0) > 0)
+  )
+    throw Error(
+      "Plain water cannot contain sugar, caffeine or alcohol. Turn off plain water for this drink.",
+    );
+  for (const value of Object.values(e.drink.extraNutrition ?? {}))
+    if (
+      value !== null &&
+      value !== undefined &&
+      (!Number.isFinite(value) || value < 0 || value > 100000)
+    )
+      throw Error("Extra nutrients must be nonnegative or left blank.");
+  const added = e.drink.extraNutrition?.added_sugar;
+  if (
+    added != null &&
+    e.drink.nutrition.sugar != null &&
+    added > e.drink.nutrition.sugar
+  )
+    throw Error("Added sugar cannot exceed total sugar.");
   if (!e.drink.name.trim()) throw Error("Enter a drink name.");
   if (!Number.isFinite(e.ml) || e.ml <= 0 || e.ml > 10000)
     throw Error("Enter an amount between 1 and 10,000 ml.");

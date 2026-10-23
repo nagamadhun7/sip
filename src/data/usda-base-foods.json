@@ -1,0 +1,339 @@
+{
+  "source": "USDA FoodData Central",
+  "retrieved": "2026-10-23",
+  "foods": [
+    {
+      "fdcId": 1911760,
+      "gtinUpc": "859808004112",
+      "description": "THE PEPPER BOTTLE COCONUT WATER, MANGO",
+      "brandOwner": "Global Water Solutions Corp",
+      "brandedFoodCategory": "Plant Based Water",
+      "servingSize": 240,
+      "servingSizeUnit": "ml",
+      "labelNutrients": {
+        "fat": {
+          "value": 0
+        },
+        "saturatedFat": {
+          "value": 0
+        },
+        "transFat": {
+          "value": 0
+        },
+        "cholesterol": {
+          "value": 0
+        },
+        "sodium": {
+          "value": 45.6
+        },
+        "carbohydrates": {
+          "value": 14
+        },
+        "fiber": {
+          "value": 0
+        },
+        "sugars": {
+          "value": 13
+        },
+        "protein": {
+          "value": 0
+        },
+        "calcium": {
+          "value": 0
+        },
+        "iron": {
+          "value": 0
+        },
+        "potassium": {
+          "value": 45.6
+        },
+        "calories": {
+          "value": 50.4
+        }
+      },
+      "publicationDate": "7/29/2021"
+    },
+    {
+      "fdcId": 2485416,
+      "gtinUpc": "041900075057",
+      "description": "WHOLE MILK CHOCOLATE, WHOLE MILK",
+      "brandOwner": "DFA Dairy Brands, LLC",
+      "brandedFoodCategory": "Milk",
+      "servingSize": 240,
+      "servingSizeUnit": "ml",
+      "labelNutrients": {
+        "fat": {
+          "value": 7.99
+        },
+        "saturatedFat": {
+          "value": 4.99
+        },
+        "transFat": {
+          "value": 0
+        },
+        "cholesterol": {
+          "value": 36
+        },
+        "sodium": {
+          "value": 230
+        },
+        "carbohydrates": {
+          "value": 25
+        },
+        "fiber": {
+          "value": 0
+        },
+        "sugars": {
+          "value": 23
+        },
+        "protein": {
+          "value": 7.99
+        },
+        "calcium": {
+          "value": 300
+        },
+        "iron": {
+          "value": 0.504
+        },
+        "potassium": {
+          "value": 439
+        },
+        "addedSugar": {
+          "value": 11
+        },
+        "calories": {
+          "value": 211
+        }
+      },
+      "publicationDate": "2/16/2023"
+    },
+    {
+      "fdcId": 2385707,
+      "gtinUpc": "072730213081",
+      "description": "WHOLE MILK",
+      "brandOwner": "Prairie Farms Dairy, Inc.",
+      "brandedFoodCategory": "Milk",
+      "servingSize": 240,
+      "servingSizeUnit": "ml",
+      "labelNutrients": {
+        "fat": {
+          "value": 7.99
+        },
+        "saturatedFat": {
+          "value": 4.99
+        },
+        "transFat": {
+          "value": 0
+        },
+        "cholesterol": {
+          "value": 36
+        },
+        "sodium": {
+          "value": 120
+        },
+        "carbohydrates": {
+          "value": 11
+        },
+        "fiber": {
+          "value": 0
+        },
+        "sugars": {
+          "value": 11
+        },
+        "protein": {
+          "value": 7.99
+        },
+        "calcium": {
+          "value": 199
+        },
+        "iron": {
+          "value": 0
+        },
+        "potassium": {
+          "value": 281
+        },
+        "calories": {
+          "value": 149
+        }
+      },
+      "publicationDate": "12/22/2022"
+    },
+    {
+      "fdcId": 2425632,
+      "gtinUpc": "041190471300",
+      "description": "COFFEE LATTE COFFEE BEVERAGE, COFFEE",
+      "brandOwner": "Wakefern Food Corporation",
+      "brandedFoodCategory": "Other Drinks",
+      "servingSize": 281,
+      "servingSizeUnit": "ml",
+      "labelNutrients": {
+        "fat": {
+          "value": 3.01
+        },
+        "saturatedFat": {
+          "value": 2
+        },
+        "transFat": {
+          "value": 0
+        },
+        "cholesterol": {
+          "value": 14
+        },
+        "sodium": {
+          "value": 115
+        },
+        "carbohydrates": {
+          "value": 25
+        },
+        "sugars": {
+          "value": 23
+        },
+        "protein": {
+          "value": 6.01
+        },
+        "calcium": {
+          "value": 219
+        },
+        "potassium": {
+          "value": 731
+        },
+        "addedSugar": {
+          "value": 12.9
+        },
+        "calories": {
+          "value": 149
+        }
+      },
+      "publicationDate": "12/22/2022"
+    },
+    {
+      "fdcId": 548317,
+      "gtinUpc": "012000044953",
+      "description": "COFFEE & PROTEIN BEVERAGE",
+      "brandOwner": "STARBUCKS",
+      "brandedFoodCategory": "Other Drinks",
+      "servingSize": 330,
+      "servingSizeUnit": "ml",
+      "labelNutrients": {
+        "fat": {
+          "value": 2.51
+        },
+        "saturatedFat": {
+          "value": 1.48
+        },
+        "transFat": {
+          "value": 0
+        },
+        "cholesterol": {
+          "value": 9.9
+        },
+        "sodium": {
+          "value": 119
+        },
+        "carbohydrates": {
+          "value": 34
+        },
+        "fiber": {
+          "value": 1.98
+        },
+        "sugars": {
+          "value": 21
+        },
+        "protein": {
+          "value": 20
+        },
+        "calcium": {
+          "value": 300
+        },
+        "iron": {
+          "value": 0.363
+        },
+        "calories": {
+          "value": 201
+        }
+      },
+      "publicationDate": "4/1/2019"
+    },
+    {
+      "fdcId": 2133897,
+      "gtinUpc": "030034918477",
+      "description": "ORANGE JUICE",
+      "brandOwner": "Giant Eagle, Inc.",
+      "brandedFoodCategory": "Fruit & Vegetable Juice, Nectars & Fruit Drinks",
+      "servingSize": 240,
+      "servingSizeUnit": "ml",
+      "labelNutrients": {
+        "fat": {
+          "value": 0
+        },
+        "sodium": {
+          "value": 0
+        },
+        "carbohydrates": {
+          "value": 26
+        },
+        "sugars": {
+          "value": 22
+        },
+        "protein": {
+          "value": 1.99
+        },
+        "potassium": {
+          "value": 451
+        },
+        "calories": {
+          "value": 110
+        }
+      },
+      "publicationDate": "10/28/2021"
+    },
+    {
+      "fdcId": 2073232,
+      "gtinUpc": "030034080808",
+      "description": "ORANGE JUICE",
+      "brandOwner": "Giant Eagle, Inc.",
+      "brandedFoodCategory": "Fruit & Vegetable Juice, Nectars & Fruit Drinks",
+      "servingSize": 240,
+      "servingSizeUnit": "ml",
+      "labelNutrients": {
+        "fat": {
+          "value": 0
+        },
+        "saturatedFat": {
+          "value": 0
+        },
+        "transFat": {
+          "value": 0
+        },
+        "cholesterol": {
+          "value": 0
+        },
+        "sodium": {
+          "value": 0
+        },
+        "carbohydrates": {
+          "value": 26
+        },
+        "fiber": {
+          "value": 0
+        },
+        "sugars": {
+          "value": 22
+        },
+        "protein": {
+          "value": 1.99
+        },
+        "calcium": {
+          "value": 350
+        },
+        "potassium": {
+          "value": 451
+        },
+        "calories": {
+          "value": 110
+        }
+      },
+      "publicationDate": "10/28/2021"
+    }
+  ]
+}

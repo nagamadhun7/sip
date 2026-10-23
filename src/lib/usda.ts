@@ -52,6 +52,23 @@ export function parseUSDA(barcode: string, food: any): Drink | null {
     serving: ml,
     color: "#8AB5C7",
     nutrition,
-    source: "USDA FoodData Central · printed serving label",
+    extraNutrition: {
+      added_sugar: labelAmount(labels.addedSugar ?? labels.addedSugars, ml),
+      calcium: labelAmount(labels.calcium, ml),
+      vitamin_d: labelAmount(labels.vitaminD, ml),
+    },
+    source: `USDA FoodData Central${food.fdcId ? " #" + food.fdcId : ""} · printed serving label`,
   };
+}
+
+function labelAmount(nutrient: any, ml: number): number | null {
+  const value = nutrient?.value;
+  return typeof value === "number" && Number.isFinite(value) && value >= 0
+    ? (value * 100) / ml
+    : null;
+}
+export function parseUSDACatalogFood(food: any): Drink | null {
+  const barcode = String(food?.gtinUpc ?? "");
+  if (!/^\d{8,14}$/.test(barcode)) return null;
+  return parseUSDA(barcode, food);
 }

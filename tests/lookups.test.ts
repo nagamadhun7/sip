@@ -56,3 +56,21 @@ test("fallback failure is not retried silently", async (t) => {
   );
   assert.equal(calls, 1);
 });
+test("USDA extra nutrients normalize printed serving values and never infer added sugar from total sugar", () => {
+  const d = parseUSDA("0123456789012", {
+    ...food,
+    labelNutrients: {
+      ...food.labelNutrients,
+      addedSugars: { value: 5 },
+      calcium: { value: 300 },
+      vitaminD: { value: 2.5 },
+    },
+  })!;
+  assert.equal(d.extraNutrition?.added_sugar, 2);
+  assert.equal(d.extraNutrition?.calcium, 120);
+  assert.equal(d.extraNutrition?.vitamin_d, 1);
+  assert.equal(
+    parseUSDA("0123456789012", food)!.extraNutrition?.added_sugar,
+    null,
+  );
+});

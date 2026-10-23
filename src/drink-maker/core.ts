@@ -20,6 +20,7 @@ export type Ingredient = {
   step: number;
   max_amount: number;
   nutrition: Nutrition;
+  extraNutrition?: Drink["extraNutrition"];
   dairy: boolean;
   vegan: boolean;
   alcohol: boolean;
@@ -491,6 +492,19 @@ export function toDrink(
         ns[k] === null ? null : (ns[k]! * 100) / t.volume_ml,
       ]),
     ) as Nutrition,
+    extraNutrition: Object.fromEntries(
+      (["added_sugar", "calcium", "vitamin_d"] as const).map((key) => {
+        let amount = 0;
+        for (const part of recipe.ingredients) {
+          const value = findIngredient(part.ingredient_id)?.extraNutrition?.[
+            key
+          ];
+          if (value == null) return [key, null];
+          amount += value * part.amount;
+        }
+        return [key, (amount * 100) / t.volume_ml];
+      }),
+    ),
     source: "Estimated from ingredient data",
   };
 }
