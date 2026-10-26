@@ -1,3 +1,4 @@
+import { BeforeDrink } from "../components/before-drink";
 import { extraNutrients, isPlainWater } from "../features/drink-goals";
 import { Host, Switch } from "@expo/ui";
 import { AccessiblePressable as Pressable } from "../components/accessible-pressable";
@@ -33,6 +34,7 @@ import {
 import { requestRecipe } from "../drink-maker/client";
 import { buildContext, toDrink, adjustRecipe } from "../drink-maker/core";
 export default function DrinkForm() {
+  const [appearanceOpen, setAppearanceOpen] = useState(false);
   const params = useLocalSearchParams<{
     drink?: string;
     compare?: string;
@@ -308,23 +310,6 @@ export default function DrinkForm() {
           {name || "New drink"}
         </T>
       </View>
-      {!existing?.health ? (
-        <DrinkAppearance
-          shape={initial.shape ?? "tall-glass"}
-          color={initial.color}
-          onShape={(shape) =>
-            setInitial({ ...initial, shape, iconType: "custom-drink" })
-          }
-          onColor={(color) =>
-            setInitial({
-              ...initial,
-              color,
-              shape: initial.shape ?? "tall-glass",
-              iconType: "custom-drink",
-            })
-          }
-        />
-      ) : null}
       {(store.settings.profile?.age ?? 0) >= 18 &&
       store.settings.makerProfile?.alcohol_tracking ? (
         <Input
@@ -391,6 +376,41 @@ export default function DrinkForm() {
           <T size={22}>+</T>
         </Pressable>
       </View>
+      {!existing &&
+      params.compare === undefined &&
+      localDay(at) === localDay() ? (
+        <BeforeDrink
+          drink={draft().drink}
+          ml={amount}
+          onSmaller={() =>
+            setMl(String(+(Math.max(1, amount / 2) / factor).toFixed(3)))
+          }
+        />
+      ) : null}
+      {!existing?.health ? (
+        <Button
+          secondary
+          title={appearanceOpen ? "Hide icon options" : "Edit icon appearance"}
+          onPress={() => setAppearanceOpen(!appearanceOpen)}
+        />
+      ) : null}
+      {!existing?.health && appearanceOpen ? (
+        <DrinkAppearance
+          shape={initial.shape ?? "tall-glass"}
+          color={initial.color}
+          onShape={(shape) =>
+            setInitial({ ...initial, shape, iconType: "custom-drink" })
+          }
+          onColor={(color) =>
+            setInitial({
+              ...initial,
+              color,
+              shape: initial.shape ?? "tall-glass",
+              iconType: "custom-drink",
+            })
+          }
+        />
+      ) : null}
       <Row
         title="Date"
         value={at.toLocaleDateString()}

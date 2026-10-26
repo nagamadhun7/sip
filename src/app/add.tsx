@@ -14,8 +14,11 @@ import { catalogDrinks } from "../lib/tracking";
 import { LogInput } from "../components/log-input";
 export default function Add() {
   const params = useLocalSearchParams<{ mode?: string }>();
+  const [checking, setChecking] = useState(params.mode === "check");
   const [autoVoice, setAutoVoice] = useState(params.mode === "voice");
-  const [tab, setTab] = useState<"Note" | "Drinks" | "More">("Note");
+  const [tab, setTab] = useState<"Note" | "Drinks" | "More">(
+    params.mode === "check" ? "Drinks" : "Note",
+  );
   const { library, catalog, containers, saveEntry, saveDrink, settings } =
       useStore(),
     [notice, setNotice] = useState(""),
@@ -57,6 +60,31 @@ export default function Add() {
               </Pressable>
             ))}
           </View>
+          <Button
+            secondary
+            title={
+              checking
+                ? "Check mode on · return to quick logging"
+                : "Check before drinking"
+            }
+            onPress={() => {
+              setChecking(!checking);
+              setTab("Drinks");
+            }}
+          />
+          {checking ? (
+            <T size={13} muted>
+              Pick a drink or scan a bottle to check bedtime caffeine and saved
+              limits before logging.
+            </T>
+          ) : null}
+          {checking ? (
+            <Button
+              secondary
+              title="Scan a bottle to check"
+              onPress={() => router.push("/scan")}
+            />
+          ) : null}
           {tab === "Note" ? (
             <>
               <T size={28} bold>
@@ -199,6 +227,16 @@ export default function Add() {
                               throw Error(
                                 "This container needs its drink selected again.",
                               );
+                            if (checking) {
+                              router.push({
+                                pathname: "/drink",
+                                params: {
+                                  drink: drink.id,
+                                  estimated_ml: String(c.ml),
+                                },
+                              });
+                              return;
+                            }
                             await saveEntry({
                               id: id(),
                               drink,
@@ -234,6 +272,13 @@ export default function Add() {
               busy
                 ? undefined
                 : async () => {
+                    if (checking) {
+                      router.push({
+                        pathname: "/drink",
+                        params: { drink: item.id },
+                      });
+                      return;
+                    }
                     setBusy(true);
                     try {
                       await saveEntry({
